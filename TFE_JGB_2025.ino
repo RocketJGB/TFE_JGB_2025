@@ -10,9 +10,9 @@
 */
 
 //******************LIBRARY******************//
-#include "FaBoPWM_PCA9685.h" //Local
+#include "FaBoPWM_PCA9685.h"  //Local
 #include <Wire.h>
-#include <Adafruit_MCP3008.h> //dois le chercher dans l'environement
+#include <Adafruit_MCP3008.h>  //dois le chercher dans l'environement
 
 FaBoPWM faboPWM;
 Adafruit_MCP3008 adc;
@@ -61,7 +61,7 @@ void loop() {
     Serial.println(pos);
   }
 
-  for (int chan = 0; chan < 8; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
+  /* for (int chan = 0; chan < 8; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
   {
     Serial.print(adc.readADC(chan));  // Afficher la lecture
     Serial.print("\t");   // fait une tabulation (table/espacement)
@@ -72,6 +72,27 @@ void loop() {
   Serial.println("]");
   count++;
 
+  delay(500);*/
+
+  for (int chan = 0; chan < 8; chan++) {
+    int adcValue = adc.readADC(chan);           // lecture de l'ADC 
+    float voltage = ((adcValue * 2.5)*2) / 1023.0;  // Convertion en voltage
+    float angle = (voltage * 180.0) / 2.5;      // Convertion en °
+
+    Serial.print("Channel ");
+    Serial.print(chan);Serial.print(":");
+    Serial.print("\t");
+    Serial.print(" ADC = ");
+    Serial.print(adcValue);Serial.print(",");
+    Serial.print("\t");
+    Serial.print(" Voltage = ");
+    Serial.print(voltage); Serial.print("V");
+    Serial.print("\t");
+    Serial.print("Angle = ");
+    Serial.print(angle);Serial.println("°");
+  }
+
+  Serial.println();
   delay(500);
 }
 
