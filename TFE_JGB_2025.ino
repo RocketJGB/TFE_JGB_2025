@@ -19,7 +19,7 @@ Adafruit_MCP3008 adc;
 
 //******************VARIABLE******************//
 int pos = 0;
-int count = 0;
+int slide = 0
 
 void setup() {
   Serial.begin(115200);  // Activation du Seriel moniteur
@@ -38,47 +38,49 @@ void setup() {
 
 void loop() {
 
-  int i;
-
   if (Serial.available() > 0) {                   //Si la Serial est superieur a 0
     String input = Serial.readStringUntil('\n');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
     int newPos = input.toInt();                   // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
 
-    pos = newPos;  // Mettre à jour la variable de la position de commande
-
-    faboPWM.set_channel_value(5, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-    delay(1000);
-    faboPWM.set_channel_value(4, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-    delay(1000);
-    faboPWM.set_channel_value(3, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-    delay(1000);
-    faboPWM.set_channel_value(2, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-    delay(1000);
+    pos = newPos;                       // Mettre à jour la variable de la position de commande
+    faboPWM.set_channel_value(0, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
+    delay(700);
     faboPWM.set_channel_value(1, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-    delay(1000);
+    delay(700);
+    faboPWM.set_channel_value(2, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
+    delay(700);
+    faboPWM.set_channel_value(3, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
+    delay(700);
+    faboPWM.set_channel_value(4, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
+    delay(700);
+    faboPWM.set_channel_value(5, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
+    delay(700);
+
 
     Serial.print("Position définie sur : ");
     Serial.println(pos);
   }
 
 
-  for (int chan = 0; chan < 8; chan++) // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
+  for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
   {
-    int adcValue = adc.readADC(chan);           // lecture de l'ADC 
-    float voltage = ((adcValue * 2.5)*2) / 1023.0;  // Convertion en voltage
-    int angle = (voltage * 180.0) / 2.5;      // Convertion en °
-
+    int adcValue = adc.readADC(chan);  // lecture de l'ADC
     Serial.print("Channel ");
-    Serial.print(chan);Serial.print(":");
-    Serial.print("\t");// fait une tabulation (table/espacement)
+    Serial.print(chan);
+    Serial.print(":");
+    Serial.print("\t");  // fait une tabulation (table/espacement)
     Serial.print(" ADC = ");
     Serial.print(adcValue);
-    Serial.print("\t");// fait une tabulation (table/espacement)
+    Serial.print("\t");                               // fait une tabulation (table/espacement)
+    float voltage = ((adcValue * 2.5) * 2) / 1023.0;  // Convertion en voltage
     Serial.print(" Voltage = ");
-    Serial.print(voltage); Serial.print("V");
-    Serial.print("\t");// fait une tabulation (table/espacement)
+    Serial.print(voltage);
+    Serial.print("V");
+    Serial.print("\t");                       // fait une tabulation (table/espacement)
+    int angle = ((voltage * 180.0) / 2.5);  // Convertion en °
     Serial.print("Angle = ");
-    Serial.print(angle);Serial.println("°");
+    Serial.print(angle);
+    Serial.println("°");
   }
 
   Serial.println();
@@ -94,5 +96,5 @@ void init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
   } else {
     Serial.println("PCA9685 n'est pas trouvé");
   }
-  faboPWM.set_hz(50);  // Mettre la frequence a 50Hz (20ms)
+  faboPWM.set_hz(200);  // Mettre la frequence a 50Hz (20ms)
 }
