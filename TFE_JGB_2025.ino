@@ -1,6 +1,19 @@
 // pq le poulet?
+/*
 
-/*   James Gordon-Ball
+to do list:
+-fonction
+-comments
+-local librairy
+-bluetooth
+-burn the school down
+-courant measurement
+-contraint management system
+-safety cap
+-move the degree and voltage measurements up into each respective mode
+-etc
+
+   James Gordon-Ball
      6A  2024-2025
      Ce code me permet t'uliser mon : 
      -ESP32   (Microcontroleur)
@@ -11,8 +24,10 @@
 
 //******************LIBRARY******************//
 #include "FaBoPWM_PCA9685.h"  //Local
+#include "TFE_JGB_2025.h"
 #include <Wire.h>
 #include <Adafruit_MCP3008.h>  //dois le chercher dans l'environement
+
 
 FaBoPWM faboPWM;
 Adafruit_MCP3008 adc;
@@ -51,70 +66,21 @@ void setup() {
 void loop() {
   if (mode == 1) {
     Serial.println("Please select a command");
-    
+
     while (mode == 1) {
       if (Serial.available()) {
         char data = Serial.read();
         switch (data) {
           case 'c':
-            faboPWM.set_channel_value(4, 500);
-            delay(500);
-            faboPWM.set_channel_value(3, 1300);
-            delay(500);
-            faboPWM.set_channel_value(2, 1200);
-            delay(500);
-            faboPWM.set_channel_value(1, 1300);
-            delay(500);
-            faboPWM.set_channel_value(0, 2100);
-            delay(500);
-
-
-            faboPWM.set_channel_value(0, 500);
-            delay(500);
-            faboPWM.set_channel_value(1, 2000);
-            delay(500);
-            faboPWM.set_channel_value(2, 2000);
-            delay(500);
-            faboPWM.set_channel_value(3, 500);
-            delay(500);
-            faboPWM.set_channel_value(4, 500);
-            delay(500);
+            Reset();
+            C_command();
             break;
           case 'i':
-            faboPWM.set_channel_value(4, 500);
-            delay(500);
-            faboPWM.set_channel_value(3, 1300);
-            delay(500);
-            faboPWM.set_channel_value(2, 1200);
-            delay(500);
-            faboPWM.set_channel_value(1, 1300);
-            delay(500);
-            faboPWM.set_channel_value(0, 2100);
-            delay(500);
+            I_command();
             break;
           case 'z':
-            faboPWM.set_channel_value(4, 500);
-            delay(500);
-            faboPWM.set_channel_value(3, 1300);
-            delay(500);
-            faboPWM.set_channel_value(2, 1200);
-            delay(500);
-            faboPWM.set_channel_value(1, 1300);
-            delay(500);
-            faboPWM.set_channel_value(0, 2100);
-            delay(500);
-
-
-            faboPWM.set_channel_value(0, 500);
-            delay(500);
-            faboPWM.set_channel_value(1, 2000);
-            delay(500);
-            faboPWM.set_channel_value(2, 2200);
-            delay(500);
-            faboPWM.set_channel_value(3, 2200);
-            delay(500);
-            faboPWM.set_channel_value(4, 500);
-            delay(500);
+            Reset();
+            Z_command();
             break;
         }
       }
@@ -126,6 +92,7 @@ void loop() {
       if (Serial.available()) {
         String input = Serial.readStringUntil('\n');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
         int newPos = input.toInt();                   // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
+        Reset();
 
         pos = newPos;                       // Mettre à jour la variable de la position de commande
         faboPWM.set_channel_value(0, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
