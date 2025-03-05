@@ -22,6 +22,7 @@ to do list:
      -MG996r  (Servomoteur)
 */
 
+
 //******************LIBRARY******************//
 #include "FaBoPWM_PCA9685.h"  //Local
 #include "TFE_JGB_2025.h"
@@ -36,6 +37,12 @@ Adafruit_MCP3008 adc;
 int pos = 0;
 byte mode = 0;
 
+int pos_0 = 0;
+int pos_1 = 0;
+int pos_2 = 0;
+int pos_3 = 0;
+int pos_4 = 0;
+int pos_5 = 0;
 
 void setup() {
   Serial.begin(115200);  // Activation du Seriel moniteur
@@ -46,7 +53,7 @@ void setup() {
   init_PCA9685();  // Fonction d'activation du PCA9685 (Driver-servo)
 
   adc.begin(18, 23, 19, 15);  // Declaration des pins MCP3008 (sck, mosi, miso, cs);
-
+  adc.begin(18, 23, 19, 5);
   Serial.println("chose Mode type (1 = commande / 2 = position)");
   while (mode == 0) {
     if (Serial.available()) {
@@ -64,6 +71,8 @@ void setup() {
 }
 
 void loop() {
+
+
   if (mode == 1) {
     Serial.println("Please select a command");
 
@@ -84,6 +93,34 @@ void loop() {
             break;
         }
       }
+      for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
+      {
+        adc.begin(5);
+        int adcValue2 = adc.readADC(chan);
+        Serial.print("Channel ");
+        Serial.print(chan);
+        Serial.print(":");
+        Serial.print("\t");  // fait une tabulation (table/espacement)
+        Serial.print(" ADC 2 = ");
+        Serial.print(adcValue2);
+        Serial.print("\t");
+        adc.begin(15);
+        int adcValue1 = adc.readADC(chan);  // lecture de l'ADC
+        Serial.print(" ADC 1 = ");
+        Serial.print(adcValue1);
+        Serial.print("\t");                                // fait une tabulation (table/espacement)
+        float voltage = ((adcValue1 * 2.5) * 2) / 1023.0;  // Convertion en voltage
+        Serial.print(" Voltage = ");
+        Serial.print(voltage);
+        Serial.print("V");
+        Serial.print("\t");                     // fait une tabulation (table/espacement)
+        int angle = ((voltage * 180.0) / 2.5);  // Convertion en °
+        Serial.print("Angle = ");
+        Serial.print(angle);
+        Serial.println("°");
+      }
+      Serial.println("---------------------------------------------------------------------");
+      delay(500);
     }
   }
   if (mode == 2) {
@@ -94,49 +131,59 @@ void loop() {
         int newPos = input.toInt();                   // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
         Reset();
 
-        pos = newPos;                       // Mettre à jour la variable de la position de commande
-        faboPWM.set_channel_value(0, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-        delay(700);
-        faboPWM.set_channel_value(1, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-        delay(700);
-        faboPWM.set_channel_value(2, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-        delay(700);
-        faboPWM.set_channel_value(3, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-        delay(700);
-        faboPWM.set_channel_value(4, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-        delay(700);
-        faboPWM.set_channel_value(5, pos);  // Pin 15 du PCA9685(Servo-driver) == pos(valeur entrer)
-        delay(700);
+        pos = newPos;  // Mettre à jour la variable de la position de commande
+
+        Set_servo(0, pos, 500);
+        Register(0, &pos_0, pos);
+
+        Set_servo(1, pos, 500);
+        Register(1, &pos_1, pos);
+
+        Set_servo(2, pos, 500);
+        Register(2, &pos_2, pos);
+
+        Set_servo(3, pos, 500);
+        Register(3, &pos_3, pos);
+
+        Set_servo(4, pos, 500);
+        Register(4, &pos_4, pos);
+
+        Set_servo(5, pos, 500);
+        Register(5, &pos_5, pos);
 
         Serial.print("Position définie sur : ");
         Serial.println(pos);
       }
+      for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
+      {
+        adc.begin(5);
+        int adcValue2 = adc.readADC(chan);
+        Serial.print("Channel ");
+        Serial.print(chan);
+        Serial.print(":");
+        Serial.print("\t");  // fait une tabulation (table/espacement)
+        Serial.print(" ADC 2 = ");
+        Serial.print(adcValue2);
+        Serial.print("\t");
+        adc.begin(15);
+        int adcValue1 = adc.readADC(chan);  // lecture de l'ADC
+        Serial.print(" ADC 1 = ");
+        Serial.print(adcValue1);
+        Serial.print("\t");                                // fait une tabulation (table/espacement)
+        float voltage = ((adcValue1 * 2.5) * 2) / 1023.0;  // Convertion en voltage
+        Serial.print(" Voltage = ");
+        Serial.print(voltage);
+        Serial.print("V");
+        Serial.print("\t");                     // fait une tabulation (table/espacement)
+        int angle = ((voltage * 180.0) / 2.5);  // Convertion en °
+        Serial.print("Angle = ");
+        Serial.print(angle);
+        Serial.println("°");
+      }
+      Serial.println("---------------------------------------------------------------------");
+      delay(500);
     }
   }
-
-  for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
-  {
-    int adcValue = adc.readADC(chan);  // lecture de l'ADC
-    Serial.print("Channel ");
-    Serial.print(chan);
-    Serial.print(":");
-    Serial.print("\t");  // fait une tabulation (table/espacement)
-    Serial.print(" ADC = ");
-    Serial.print(adcValue);
-    Serial.print("\t");                               // fait une tabulation (table/espacement)
-    float voltage = ((adcValue * 2.5) * 2) / 1023.0;  // Convertion en voltage
-    Serial.print(" Voltage = ");
-    Serial.print(voltage);
-    Serial.print("V");
-    Serial.print("\t");                     // fait une tabulation (table/espacement)
-    int angle = ((voltage * 180.0) / 2.5);  // Convertion en °
-    Serial.print("Angle = ");
-    Serial.print(angle);
-    Serial.println("°");
-  }
-
-  Serial.println();
-  delay(500);
 }
 
 

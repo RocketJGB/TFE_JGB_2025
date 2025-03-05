@@ -49,3 +49,15 @@ void Reset(void) {
   faboPWM.set_channel_value(0, 2100);
   delay(500);
 }
+void Set_servo(int chan, int value, int time) {
+  faboPWM.set_channel_value(chan, value);
+  delay(time);
+}
+void Register (int chan, int *pdef_value, int init_value)
+{
+  int voltage = ((init_value*2.5)*2)/1023;
+  *pdef_value = ((voltage * 180) / 2.5);
+  Serial.print(chan);
+  Serial.print("\t");
+  Serial.println(*pdef_value);
+}
