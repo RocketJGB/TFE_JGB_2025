@@ -2,6 +2,7 @@
 /*
 
 to do list:
+-MVC !!!!!!!
 -fonction
 -comments
 -local librairy
@@ -43,6 +44,9 @@ int pos_2 = 0;
 int pos_3 = 0;
 int pos_4 = 0;
 int pos_5 = 0;
+int chan_M3 = 0;
+
+unsigned int def_value;
 
 void setup() {
   Serial.begin(115200);  // Activation du Seriel moniteur
@@ -54,7 +58,8 @@ void setup() {
 
   adc.begin(18, 23, 19, 15);  // Declaration des pins MCP3008 (sck, mosi, miso, cs);
   adc.begin(18, 23, 19, 5);
-  Serial.println("chose Mode type (1 = commande / 2 = position)");
+  Serial.println("chose Mode type (1 = Commande / 2 = Hive / 3 = Individuel)");
+
   while (mode == 0) {
     if (Serial.available()) {
       char type = Serial.read();
@@ -64,7 +69,11 @@ void setup() {
       }
       if (type == '2') {
         mode = 2;
-        Serial.println("Position mode chosen");
+        Serial.println("Hive mode chosen");
+      }
+      if (type == '3') {
+        mode = 3;
+        Serial.println("Individuel Position mode chosen");
       }
     }
   }
@@ -132,24 +141,30 @@ void loop() {
         Reset();
 
         pos = newPos;  // Mettre à jour la variable de la position de commande
-
+        
         Set_servo(0, pos, 500);
-        Register(0, &pos_0, pos);
+        Register(0);
+        Serial.println(def_value);
 
         Set_servo(1, pos, 500);
-        Register(1, &pos_1, pos);
+        Register(1);
+        Serial.println(def_value);
 
         Set_servo(2, pos, 500);
-        Register(2, &pos_2, pos);
+        Register(2);
+        Serial.println(def_value);
 
         Set_servo(3, pos, 500);
-        Register(3, &pos_3, pos);
+        Register(3);
+        Serial.println(def_value);
 
         Set_servo(4, pos, 500);
-        Register(4, &pos_4, pos);
+        Register(4);
+        Serial.println(def_value);
 
         Set_servo(5, pos, 500);
-        Register(5, &pos_5, pos);
+        Register(5);
+        Serial.println(def_value);
 
         Serial.print("Position définie sur : ");
         Serial.println(pos);
@@ -184,7 +199,31 @@ void loop() {
       delay(500);
     }
   }
+  if (mode == 3) {
+    Serial.println("Please select a position between 400 and 2200");
+    Reset();
+
+    while (mode == 3) {
+      while (chan_M3 < 6) {
+        if (Serial.available()) {
+          String input = Serial.readStringUntil('\n');
+          int newPos = input.toInt();
+
+          Set_servo(chan_M3, newPos, 500);
+          Serial.print("channel : ");
+          Serial.print(chan_M3);
+          Serial.print("\t");
+          Serial.println(newPos);
+
+          chan_M3++;
+        }
+      }
+      Serial.println("Restarting...");
+      chan_M3 = 0;
+    }
+  }
 }
+
 
 
 void init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)

@@ -1,4 +1,6 @@
 #include "FaBoPWM_PCA9685.h"
+#include <Adafruit_MCP3008.h> 
+extern Adafruit_MCP3008 adc;
 extern FaBoPWM faboPWM;
 
 void C_command(void) {
@@ -53,11 +55,10 @@ void Set_servo(int chan, int value, int time) {
   faboPWM.set_channel_value(chan, value);
   delay(time);
 }
-void Register (int chan, int *pdef_value, int init_value)
-{
-  int voltage = ((init_value*2.5)*2)/1023;
-  *pdef_value = ((voltage * 180) / 2.5);
-  Serial.print(chan);
-  Serial.print("\t");
-  Serial.println(*pdef_value);
+unsigned int Register(int channel) {
+  adc.begin(15);
+  int adcValue = adc.readADC(channel);
+  float voltage = ((adcValue * 2.5) * 2) / 1023;
+  unsigned int def_value = ((voltage * 180) / 2.5);
+  return def_value;
 }
