@@ -1,7 +1,23 @@
 #include "FaBoPWM_PCA9685.h"
-#include <Adafruit_MCP3008.h> 
+#include <Adafruit_MCP3008.h>
+//#include "TFE_JGB_2025.h"
+
 extern Adafruit_MCP3008 adc;
 extern FaBoPWM faboPWM;
+
+
+int mode = 0;
+void init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
+{
+  if (faboPWM.begin())  // Vérification
+  {
+    Serial.println("PCA9685 trouvé");
+    faboPWM.init(300);  // Initialisation des parametres internes
+  } else {
+    Serial.println("PCA9685 n'est pas trouvé");
+  }
+  faboPWM.set_hz(200);  // Mettre la frequence a 50Hz (20ms)
+}
 
 void C_command(void) {
   faboPWM.set_channel_value(0, 500);
@@ -62,3 +78,26 @@ unsigned int Register(int channel) {
   unsigned int def_value = ((voltage * 180) / 2.5);
   return def_value;
 }
+
+
+/*int Mode1(void) {
+  if (type == '1') {
+    mode = 1;
+    Serial.println("Commande mode chosen");
+  }
+  return mode;
+}
+int Mode2(void) {
+  if (type == '2') {
+    mode = 2;
+    Serial.println("Hive mode chosen");
+  }
+  return mode;
+}
+int Mode3(void) {
+  if (type == '3') {
+    mode = 3;
+    Serial.println("Individuel Position mode chosen");
+  }
+  return mode;
+}*/
