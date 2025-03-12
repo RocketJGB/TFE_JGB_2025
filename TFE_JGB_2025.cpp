@@ -5,20 +5,28 @@
 extern Adafruit_MCP3008 adc;
 extern FaBoPWM faboPWM;
 
-
+int x;
 int mode = 0;
-void init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
+int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
 {
   if (faboPWM.begin())  // Vérification
   {
-    Serial.println("PCA9685 trouvé");
-    faboPWM.init(300);  // Initialisation des parametres internes
+    faboPWM.init(300);    // Initialisation des parametres internes
+    faboPWM.set_hz(200);  // Mettre la frequence a 50Hz (20ms)
+    return 1;
   } else {
     Serial.println("PCA9685 n'est pas trouvé");
+    return 0;
   }
-  faboPWM.set_hz(200);  // Mettre la frequence a 50Hz (20ms)
 }
-
+void Open(void){
+  faboPWM.set_channel_value(5, 700);
+  delay(500);
+}
+void Close(void){
+  faboPWM.set_channel_value(5, 1300);
+  delay(500);
+}
 void C_command(void) {
   faboPWM.set_channel_value(0, 500);
   delay(500);

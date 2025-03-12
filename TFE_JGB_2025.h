@@ -17,8 +17,10 @@ void Set_servo(int chan, int value, int time);
 
 unsigned int Register (int chan);
 
-void init_PCA9685();
+int init_PCA9685();
 
+void Close(void);
+void Open(void);
 /*int Mode1(void);
 int Mode2(void);
 int Mode3(void);*/

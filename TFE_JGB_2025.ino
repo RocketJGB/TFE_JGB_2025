@@ -46,17 +46,26 @@ int chan_M3 = 0;
 
 unsigned int def_value;
 
+
 void setup() {
   Serial.begin(115200);  // Activation du Seriel moniteur
   while (!Serial) {}
 
   Serial.println("MCP3008 simple test.");
 
-  init_PCA9685();  // Fonction d'activation du PCA9685 (Driver-servo)
+  int a = init_PCA9685();  // Fonction d'activation du PCA9685 (Driver-servo)
+  if (a = 1) {
+    Serial.println("PCA9685 trouvé");
+  } else {
+    if (a = 0) {
+      Serial.println("PCA9685 n'est pas trouvé");
+    }
+  }
+
 
   adc.begin(18, 23, 19, 15);  // Declaration des pins MCP3008 (sck, mosi, miso, cs);
   adc.begin(18, 23, 19, 5);
-  
+
   Serial.println("chose Mode type (1 = Commande / 2 = Hive / 3 = Individuel)");
 
   while (mode == 0) {
@@ -83,7 +92,7 @@ void loop() {
 
   if (mode == 1) {
     Serial.println("Please select a command");
-
+    Serial.println("Pls select c, i, z and keep a safe distance");
     while (mode == 1) {
       if (Serial.available()) {
         char data = Serial.read();
@@ -98,6 +107,12 @@ void loop() {
           case 'z':
             Reset();
             Z_command();
+            break;
+          case 'o':
+            Open();
+            break;
+          case 'l':
+            Close();
             break;
         }
       }
@@ -116,7 +131,7 @@ void loop() {
     }
   }
   if (mode == 2) {
-    Serial.println("Please select a position between 400 and 2200");
+    Serial.println("Please select a position between 400 and 2200 and keep a safe distance");
     while (mode == 2) {
       if (Serial.available()) {
         String input = Serial.readStringUntil('\n');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
@@ -167,7 +182,7 @@ void loop() {
     }
   }
   if (mode == 3) {
-    Serial.println("Please select a position between 400 and 2200");
+    Serial.println("Please select a position between 400 and 2200 and keep a safe distance");
     Reset();
 
     while (mode == 3) {
@@ -190,7 +205,3 @@ void loop() {
     }
   }
 }
-
-
-
-
