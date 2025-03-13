@@ -22,7 +22,14 @@ to do list:
      -PCA9685 (Driver-Servo)
      -MG996r  (Servomoteur)
 */
+/*
+exemple:
 
+#define kk
+#ifdef kk
+ Serial.print("fjqiuhiuqsh");
+#endif
+*/
 
 //******************LIBRARY******************//
 #include "FaBoPWM_PCA9685.h"  //Local
@@ -36,15 +43,8 @@ Adafruit_MCP3008 adc;
 
 //******************VARIABLE******************//
 char type;
-int pos_0 = 0;
-int pos_1 = 0;
-int pos_2 = 0;
-int pos_3 = 0;
-int pos_4 = 0;
-int pos_5 = 0;
-int chan_M3 = 0;
-
-unsigned int def_value;
+int pos_0 = 0, pos_1 = 0, pos_2 = 0, pos_3 = 0, pos_4 = 0, pos_5 = 0, chan_M3 = 0;
+unsigned int def_value = 0;
 
 
 void setup() {
@@ -61,11 +61,8 @@ void setup() {
       Serial.println("PCA9685 n'est pas trouvé");
     }
   }
-
-
-  adc.begin(18, 23, 19, 15);  // Declaration des pins MCP3008 (sck, mosi, miso, cs);
-  adc.begin(18, 23, 19, 5);
-
+  ADC_Begin(CS_A);
+  ADC_Begin(CS_B);
   Serial.println("chose Mode type (1 = Commande / 2 = Hive / 3 = Individuel)");
 
   while (mode == 0) {
@@ -92,7 +89,7 @@ void loop() {
 
   if (mode == 1) {
     Serial.println("Please select a command");
-    Serial.println("Pls select c, i, z and keep a safe distance");
+    Serial.println("Pls select c, i, z, o, l and keep a safe distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     while (mode == 1) {
       if (Serial.available()) {
         char data = Serial.read();
@@ -118,9 +115,9 @@ void loop() {
       }
       for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
       {
-        adc.begin(5);
+        adc.begin(CS_B);
         int adcValue2 = adc.readADC(chan);
-        adc.begin(15);
+        adc.begin(CS_A);
         int adcValue1 = adc.readADC(chan);                 // lecture de l'ADC
         float voltage = ((adcValue1 * 2.5) * 2) / 1023.0;  // Convertion en voltage
         int angle = ((voltage * 180.0) / 2.5);             // Convertion en °
@@ -131,7 +128,7 @@ void loop() {
     }
   }
   if (mode == 2) {
-    Serial.println("Please select a position between 400 and 2200 and keep a safe distance");
+    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     while (mode == 2) {
       if (Serial.available()) {
         String input = Serial.readStringUntil('\n');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
@@ -169,9 +166,9 @@ void loop() {
       }
       for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
       {
-        adc.begin(5);
+        adc.begin(CS_B);
         int adcValue2 = adc.readADC(chan);
-        adc.begin(15);
+        adc.begin(CS_A);
         int adcValue1 = adc.readADC(chan);                 // lecture de l'ADC
         float voltage = ((adcValue1 * 2.5) * 2) / 1023.0;  // Convertion en voltage
         int angle = ((voltage * 180.0) / 2.5);             // Convertion en °
@@ -182,7 +179,7 @@ void loop() {
     }
   }
   if (mode == 3) {
-    Serial.println("Please select a position between 400 and 2200 and keep a safe distance");
+    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     Reset();
 
     while (mode == 3) {
