@@ -1,9 +1,9 @@
 
-#define MOSI 23;
-#define MISO 19;
-#define SLK 18;
-#define CS_A 15;
-#define CS_B 5;
+#define MOSI 23
+#define MISO 19
+#define SLK 18
+#define CS_A 15
+#define CS_B 5
 
 extern int mode;
 extern char type;
@@ -17,7 +17,7 @@ void Z_command(void);
 
 void Reset(void);
 
-void Set_servo(int chan, int value, int time);
+void Set_servo(int chan, int value);
 
 unsigned int Register (int chan);
 
@@ -28,6 +28,9 @@ void Close(void);
 void Open(void);
 
 void ADC_Begin(int CS);
+
+float Mesure_voltage(int lane);
+int Mesure_angle(float volt);
 /*int Mode1(void);
 int Mode2(void);
 int Mode3(void);*/

@@ -1,4 +1,5 @@
-#include "FaBoPWM_PCA9685.h"
+#include "Arduino.h"
+#include <FaBoPWM_PCA9685.h>
 #include <Adafruit_MCP3008.h>
 #include "TFE_JGB_2025.h"
 
@@ -20,83 +21,73 @@ int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
   }
 }
 void Open(void) {
-  faboPWM.set_channel_value(5, 700);
-  delay(500);
+  Set_servo(5, 700);
 }
 void Close(void) {
-  faboPWM.set_channel_value(5, 1300);
-  delay(500);
+  Set_servo(5, 1300);
 }
 void C_command(void) {
-  faboPWM.set_channel_value(0, 500);
-  delay(500);
-  faboPWM.set_channel_value(1, 2000);
-  delay(500);
-  faboPWM.set_channel_value(2, 2000);
-  delay(500);
-  faboPWM.set_channel_value(3, 500);
-  delay(500);
-  faboPWM.set_channel_value(4, 500);
-  delay(500);
+  Set_servo(4, 500);  //Reset
+  Set_servo(3, 1300);
+  Set_servo(2, 1200);
+  Set_servo(1, 1300);
+  Set_servo(0, 2100);
+
+  Set_servo(0, 500);  //Formation set c
+  Set_servo(1, 2000);
+  Set_servo(2, 2000);
+  Set_servo(3, 500);
+  Set_servo(4, 500);
 }
 void I_command(void) {
-  faboPWM.set_channel_value(4, 500);
-  delay(500);
-  faboPWM.set_channel_value(3, 1300);
-  delay(500);
-  faboPWM.set_channel_value(2, 1200);
-  delay(500);
-  faboPWM.set_channel_value(1, 1300);
-  delay(500);
-  faboPWM.set_channel_value(0, 2100);
-  delay(500);
+  Set_servo(4, 500);  //Reset
+  Set_servo(3, 1300);
+  Set_servo(2, 1200);
+  Set_servo(1, 1300);
+  Set_servo(0, 2100);
 }
 void Z_command(void) {
-  faboPWM.set_channel_value(0, 500);
-  delay(500);
-  faboPWM.set_channel_value(1, 2000);
-  delay(500);
-  faboPWM.set_channel_value(2, 2200);
-  delay(500);
-  faboPWM.set_channel_value(3, 2200);
-  delay(500);
-  faboPWM.set_channel_value(4, 500);
-  delay(500);
+
+  Set_servo(4, 500);  //Reset
+  Set_servo(3, 1300);
+  Set_servo(2, 1200);
+  Set_servo(1, 1300);
+  Set_servo(0, 2100);
+
+  Set_servo(0, 500);  //Formation set Z
+  Set_servo(1, 2000);
+  Set_servo(2, 2200);
+  Set_servo(3, 2200);
+  Set_servo(4, 500);
 }
 void Reset(void) {
-  faboPWM.set_channel_value(4, 500);
-  delay(500);
-  faboPWM.set_channel_value(3, 1300);
-  delay(500);
-  faboPWM.set_channel_value(2, 1200);
-  delay(500);
-  faboPWM.set_channel_value(1, 1300);
-  delay(500);
-  faboPWM.set_channel_value(0, 2100);
-  delay(500);
-  Set_servo(4, 500, int time);
-  Set_servo(3, 1300, int time);
-  Set_servo(2, 1200, int time);
-  Set_servo(1, 1300, int time);
-  Set_servo(0, 2100, int time);
+  Set_servo(4, 500);  //Reset
+  Set_servo(3, 1300);
+  Set_servo(2, 1200);
+  Set_servo(1, 1300);
+  Set_servo(0, 2100);
 }
-void Set_servo(int chan, int value, int time) {
-  int pos = value;
+void Set_servo(int chan, int value) {
   faboPWM.set_channel_value(chan, value);
-  pos = mesure_pose_servo(chan);
+  int pos = Mesure_angle(Mesure_voltage(chan));
   while ((pos <= pos - 200) || (pos >= pos + 200)) {
-    pos = mesure_pose_servo(chan);
+    pos = Mesure_angle(Mesure_voltage(chan));
+    return;
   }
 }
-unsigned int Register(int channel) {
-  adc.begin(15);
-  int adcValue = adc.readADC(channel);
-  float voltage = ((adcValue * 2.5) * 2) / 1023;
-  unsigned int def_value = ((voltage * 180) / 2.5);
-  return def_value;
-}
+
 void ADC_Begin(int CS) {
   adc.begin(SLK, MOSI, MISO, CS);
+}
+
+float Mesure_voltage(int lane) {
+  int adcValueA = adc.readADC(lane);
+  float voltage = ((adcValueA * 2.5) * 2) / 1023.0;
+  return voltage;
+}
+int Mesure_angle(float volt) {
+  int angle = ((volt * 180.0) / 5.0);
+  return angle;
 }
 
 
