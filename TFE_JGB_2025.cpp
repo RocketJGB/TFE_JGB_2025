@@ -1,13 +1,19 @@
-#include "Arduino.h"
-#include <FaBoPWM_PCA9685.h>
-#include <Adafruit_MCP3008.h>
+
 #include "TFE_JGB_2025.h"
 
-extern Adafruit_MCP3008 adc;
-extern FaBoPWM faboPWM;
 
+Adafruit_MCP3008 adc;  // Définition objet
+FaBoPWM faboPWM;
+
+char cmdBuffer[CMD_BUFFER_SIZE];  // Create a character array (buffer) to store the command
+char c;
+
+int angle = 0, adcValueA = 0, adcValueB = 0;
+float voltage = 0;
 int x;
 int mode = 0;
+int cmdIndex = 0;  // Initialize the index to track the buffer position
+
 int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
 {
   if (faboPWM.begin())  // Vérification
@@ -19,6 +25,24 @@ int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
     Serial.println("PCA9685 n'est pas trouvé");
     return 0;
   }
+}
+void Snake(void) {
+  Reset();
+  Set_servo(2, 900);
+  Set_servo(3, 1600);
+  Set_servo(0, 500);
+  Open();
+  Close();
+  Open();
+  Close();
+  Set_servo(2, 1600);
+  Set_servo(3, 900);
+  Set_servo(0, 2100);
+  Open();
+  Close();
+  Open();
+  Close();
+  Reset();
 }
 void Open(void) {
   Set_servo(5, 700);
@@ -68,11 +92,15 @@ void Reset(void) {
   Set_servo(0, 2100);
 }
 void Set_servo(int chan, int value) {
+  int Pos_want = (value - 400) / 10;
+  int Pos_act = Mesure_angle(chan);
   faboPWM.set_channel_value(chan, value);
-  int pos = Mesure_angle(Mesure_voltage(chan));
-  while ((pos <= pos - 200) || (pos >= pos + 200)) {
-    pos = Mesure_angle(Mesure_voltage(chan));
-    return;
+  while (1) {
+    Pos_want = (value - 400) / 10;
+    Pos_act = Mesure_angle(chan);
+    if ((Pos_act <= Pos_want - 10) || (Pos_act >= Pos_want + 10)) {
+      break;
+    }
   }
 }
 
@@ -82,33 +110,84 @@ void ADC_Begin(int CS) {
 
 float Mesure_voltage(int lane) {
   int adcValueA = adc.readADC(lane);
-  float voltage = ((adcValueA * 2.5) * 2) / 1023.0;
+  float voltage = (adcValueA * 5) / 1023.0;
   return voltage;
 }
-int Mesure_angle(float volt) {
-  int angle = ((volt * 180.0) / 5.0);
+int Mesure_angle(int lane) {
+  int adcValueA = adc.readADC(lane);
+  int angle = (adcValueA - 170) / 2;
   return angle;
 }
+void check_Serial_Command(void) {
 
+  while (Serial.available()) {
+    c = Serial.read();
 
-/*int Mode1(void) {
-  if (type == '1') {
-    mode = 1;
-    Serial.println("Commande mode chosen");
+    if (c == '\n' || c == '\r') {
+      cmdBuffer[cmdIndex] = '\0';
+
+      if (strcmp(cmdBuffer, "reset") == 0) {
+        Serial.println(F(" Reset Command card selected "));
+        ESP.restart();
+      } else if (strcmp(cmdBuffer, "FormeZ") == 0) {
+        Serial.println(" Position Z selected ");
+        Reset();
+        Z_command();
+      } else if (strcmp(cmdBuffer, "FormeC") == 0) {
+        Serial.println(" Position C selected ");
+        Reset();
+        C_command();
+      } else if (strcmp(cmdBuffer, "FormeI") == 0) {
+        Serial.println(" Position I selected ");
+        Reset();
+        I_command();
+      } else if (strcmp(cmdBuffer, "Open") == 0) {
+        Serial.println(" Claw Opened ");
+        Open();
+      } else if (strcmp(cmdBuffer, "Close") == 0) {
+        Serial.println(" Claw Closed ");
+        Close();
+      } else if (strcmp(cmdBuffer, "Defense") == 0) {
+        Serial.println(" Im a minor, Get back!!!!!!! ");
+        Snake();
+      } else if (strcmp(cmdBuffer, "Measure") == 0) {
+        Serial.println(" Measurements ");
+        Measurement_Protocol();
+      } else {
+        Serial.print(F(" Unrecognised Commande :  "));
+        Serial.println(cmdBuffer);
+        Command_list();
+      }
+      cmdIndex = 0;
+      memset(cmdBuffer, 0, CMD_BUFFER_SIZE);
+    } else if (cmdIndex < CMD_BUFFER_SIZE - 1) {
+      cmdBuffer[cmdIndex++] = c;
+    }
   }
-  return mode;
 }
-int Mode2(void) {
-  if (type == '2') {
-    mode = 2;
-    Serial.println("Hive mode chosen");
+
+void Measurement_Protocol(void) {
+  for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
+  {
+    adc.begin(CS_B);
+    adcValueB = adc.readADC(chan);
+    adc.begin(CS_A);
+    adcValueA = adc.readADC(chan);   // lecture de l'ADC
+    voltage = Mesure_voltage(chan);  // Convertion en voltage
+    angle = Mesure_angle(chan);      // Convertion en °
+    Serial.printf("Channel : %d \t ADC_B = %d \t ADC_A = %d \t Voltage = %f V\t Angle = %d °\n", chan, adcValueB, adcValueA, voltage, angle);
   }
-  return mode;
+  Serial.println("--------------------------------------------------------------------------------------------------------------------------");
+  delay(1000);
 }
-int Mode3(void) {
-  if (type == '3') {
-    mode = 3;
-    Serial.println("Individuel Position mode chosen");
-  }
-  return mode;
-}*/
+void Command_list(void) {
+  Serial.println(F("--------------------------------------------------------"));  //F = Stored in the flash instead of RAM (save space and memory)
+  Serial.println(F("Pls select a Command : "));
+  Serial.println(F("reset = reset the code"));
+  Serial.println(F("FormeZ = Z pose"));
+  Serial.println(F("FormeC = C pose"));
+  Serial.println(F("FormeI = I pose"));
+  Serial.println(F("Open = Opens claw"));
+  Serial.println(F("Open = Closes claw"));
+  Serial.println(F("────────────────────────────────────────────────────────"));
+}

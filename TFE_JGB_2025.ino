@@ -2,18 +2,18 @@
 /*
 
 to do list:
--MVC !!!!!!!
--fonction
--sleep
+-MVC !!!!!!!  
+-fonction     //
+-sleep//
 -comments
--local librairy
+-local librairy//
 -bluetooth
 -burn the school down
 -courant measurement
--contraint management system
--safety cap
+-contraint management system   //
+-safety cap   
 -it talks to me 
--move the degree and voltage measurements up into each respective mode
+-move the degree and voltage measurements up into each respective mode  //
 -etc
 
    James Gordon-Ball
@@ -35,21 +35,16 @@ exemple:
 
 //******************LIBRARY******************//
 
-#include "TFE_JGB_2025.h" //Local
+#include "TFE_JGB_2025.h"  //Local
 #include "Dabble_GamePad.h"
-#include <Wire.h>
-#include <Adafruit_MCP3008.h>  //dois le chercher dans l'environement
-#include <FaBoPWM_PCA9685.h> 
 
-FaBoPWM faboPWM;
-Adafruit_MCP3008 adc;
+
+
 DabbleGamepad gamepad;
 
 //******************VARIABLE******************//
 char type;
-int pos_0 = 0, pos_1 = 0, pos_2 = 0, pos_3 = 0, pos_4 = 0, pos_5 = 0, chan_M3 = 0, angle = 0, adcValueA = 0, adcValueB = 0;
-unsigned int def_value = 0;
-float voltage = 0;
+int chan_M3 = 0;
 
 void setup() {
   gamepad.begin(9600);
@@ -94,42 +89,9 @@ void loop() {
 
   if (mode == 1) {
     Serial.println("Please select a command");
-    Serial.println("Pls select c, i, z, o, l and keep a safe distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    Command_list();
     while (mode == 1) {
-      if (Serial.available()) {
-        char data = Serial.read();
-        switch (data) {
-          case 'c':
-            Reset();
-            C_command();
-            break;
-          case 'i':
-            I_command();
-            break;
-          case 'z':
-            Reset();
-            Z_command();
-            break;
-          case 'o':
-            Open();
-            break;
-          case 'l':
-            Close();
-            break;
-        }
-      }
-      for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
-      {
-        adc.begin(CS_B);
-        adcValueB = adc.readADC(chan);
-        adc.begin(CS_A);
-        adcValueA = adc.readADC(chan);   // lecture de l'ADC
-        voltage = Mesure_voltage(chan);  // Convertion en voltage
-        angle = Mesure_angle(voltage);   // Convertion en °
-        Serial.printf("Channel : %d \t ADC_B = %d \t ADC_A = %d \t Voltage = %f V\t Angle = %d °\n", chan, adcValueB, adcValueA, voltage, angle);
-      }
-      Serial.println("--------------------------------------------------------------------------------------------------------------------------");
-      delay(500);
+      check_Serial_Command();
     }
   }
   if (mode == 2) {
@@ -138,9 +100,9 @@ void loop() {
       if (Serial.available()) {
         String input = Serial.readStringUntil('\n');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
         int newPos = input.toInt();                   // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
+        int pos = (newPos * 10) + 400;                // Mettre à jour la variable de la position de commande
         Reset();
 
-        int pos = newPos;  // Mettre à jour la variable de la position de commande
 
         Set_servo(0, pos);
 
@@ -157,18 +119,7 @@ void loop() {
         Serial.print("Position définie sur : ");
         Serial.println(pos);
       }
-      for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
-      {
-        adc.begin(CS_B);
-        adcValueB = adc.readADC(chan);
-        adc.begin(CS_A);
-        adcValueA = adc.readADC(chan);   // lecture de l'ADC
-        voltage = Mesure_voltage(chan);  // Convertion en voltage
-        angle = Mesure_angle(voltage);   // Convertion en °
-        Serial.printf("Channel : %d \t ADC_B = %d \t ADC_A = %d \t Voltage = %f V\t Angle = %d °\n", chan, adcValueB, adcValueA, voltage, angle);
-      }
-      Serial.println("---------------------------------------------------------------------");
-      delay(500);
+      Measurement_Protocol();
     }
   }
   if (mode == 3) {
@@ -180,27 +131,16 @@ void loop() {
         if (Serial.available()) {
           String input = Serial.readStringUntil('\n');
           int newPos = input.toInt();
-
-          Set_servo(chan_M3, newPos);
+          int pos = (newPos * 10) + 400;  // Mettre à jour la variable de la position de commande
+          Set_servo(chan_M3, pos);
           Serial.print("channel : ");
           Serial.print(chan_M3);
           Serial.print("\t");
-          Serial.println(newPos);
+          Serial.println(pos);
 
           chan_M3++;
         }
-        for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
-        {
-          adc.begin(CS_B);
-          adcValueB = adc.readADC(chan);
-          adc.begin(CS_A);
-          adcValueA = adc.readADC(chan);   // lecture de l'ADC
-          voltage = Mesure_voltage(chan);  // Convertion en voltage
-          angle = Mesure_angle(voltage);   // Convertion en °
-          Serial.printf("Channel : %d \t ADC_B = %d \t ADC_A = %d \t Voltage = %f V\t Angle = %d °\n", chan, adcValueB, adcValueA, voltage, angle);
-        }
-        Serial.println("--------------------------------------------------------------------------------------------------------------------------");
-        delay(500);
+      Measurement_Protocol();
       }
       Serial.println("Restarting...");
       chan_M3 = 0;
