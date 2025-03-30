@@ -36,56 +36,23 @@ exemple:
 //******************LIBRARY******************//
 
 #include "TFE_JGB_2025.h"  //Local
-#include "Dabble_GamePad.h"
-
-
-
-DabbleGamepad gamepad;
-
-//******************VARIABLE******************//
-char type;
-int chan_M3 = 0;
+//#include "Dabble_GamePad.h"
+//DabbleGamepad gamepad;
 
 void setup() {
-  gamepad.begin(9600);
+  //gamepad.begin(9600);
   Serial.begin(115200);  // Activation du Seriel moniteur
   while (!Serial) {}
-
-  Serial.println("MCP3008 simple test.");
-
-  int a = init_PCA9685();  // Fonction d'activation du PCA9685 (Driver-servo)
-  if (a == 1) {
-    Serial.println("PCA9685 trouvé");
-  } else {
-    if (a == 0) {
-      Serial.println("PCA9685 n'est pas trouvé");
-    }
-  }
+  Verif_driver();
   ADC_Begin(CS_A);
+  Serial.println("ADC_A Approved");
   ADC_Begin(CS_B);
-  Serial.println("chose Mode type (1 = Commande / 2 = Hive / 3 = Individuel)");
-
-  while (mode == 0) {
-    if (Serial.available()) {
-      char type = Serial.read();
-      if (type == '1') {
-        mode = 1;
-        Serial.println("Command mode chosen");
-      }
-      if (type == '2') {
-        mode = 2;
-        Serial.println("Hive mind mode chosen");
-      }
-      if (type == '3') {
-        mode = 3;
-        Serial.println("Individuel Position mode chosen");
-      }
-    }
-  }
+  Serial.println("ADC_B Approved");
+  Serial.println("Pls select a mode (1 = Commande / 2 = Hive / 3 = Individuel / 4 = Bluetooth)");
 }
-
 void loop() {
 
+  Mode_Choice();
 
   if (mode == 1) {
     Serial.println("Please select a command");
@@ -95,55 +62,25 @@ void loop() {
     }
   }
   if (mode == 2) {
-    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!");
     while (mode == 2) {
-      if (Serial.available()) {
-        String input = Serial.readStringUntil('\n');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
-        int newPos = input.toInt();                   // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
-        int pos = (newPos * 10) + 400;                // Mettre à jour la variable de la position de commande
-        Reset();
-
-
-        Set_servo(0, pos);
-
-        Set_servo(1, pos);
-
-        Set_servo(2, pos);
-
-        Set_servo(3, pos);
-
-        Set_servo(4, pos);
-
-        Set_servo(5, pos);
-
-        Serial.print("Position définie sur : ");
-        Serial.println(pos);
-      }
+      Hivemind_Command();
       Measurement_Protocol();
     }
   }
   if (mode == 3) {
-    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!");
     Reset();
-
+    int chan_M3 = 0;
     while (mode == 3) {
       while (chan_M3 < 6) {
-        if (Serial.available()) {
-          String input = Serial.readStringUntil('\n');
-          int newPos = input.toInt();
-          int pos = (newPos * 10) + 400;  // Mettre à jour la variable de la position de commande
-          Set_servo(chan_M3, pos);
-          Serial.print("channel : ");
-          Serial.print(chan_M3);
-          Serial.print("\t");
-          Serial.println(pos);
-
-          chan_M3++;
-        }
-      Measurement_Protocol();
+        Individuel_Servo_Command(chan_M3);
+        chan_M3++;
       }
-      Serial.println("Restarting...");
-      chan_M3 = 0;
+      Measurement_Protocol();
     }
+    Serial.println("Restarting...");
+    chan_M3 = 0;
   }
 }
+

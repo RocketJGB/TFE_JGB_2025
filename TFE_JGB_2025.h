@@ -17,8 +17,8 @@
 extern Adafruit_MCP3008 adc;
 extern FaBoPWM faboPWM;
 
-extern char type;
-extern int  angle, adcValueA, adcValueB, mode;
+
+extern int angle, adcValueA, adcValueB, mode;
 extern float voltage;
 
 void check_Serial_Command(void);
@@ -53,4 +53,11 @@ void Measurement_Protocol(void);
 
 void Command_list(void);
 
+void Mode_Choice(void);
+
+void Verif_driver(void);
+
+void Individuel_Servo_Command(int chan);
+
+void Hivemind_Command(void);
 #endif
