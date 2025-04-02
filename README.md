@@ -1,28 +1,50 @@
-Sommaire
-- [Introduction](#Introduction)
+# Projet en cours de réalisation par : 
+- **Nom,Prénom :** James Falconer Gordon Ball
+- **Ecole :** In.Ra.Ci
+- **Annee :** 2024-2025
+- **Classe :** 6 TQ A
+- **Promotteur :** Feliz Kapita 
 
-1)Introduction
+**Sommaire**
+- [Introduction](#Introduction)
+- [Schema Bloc](#Schema-Bloc)
+
+**1)[Introduction](#Introduction)**
+
   -Motivation 
+  
   -Comment
   
-2)Schema Bloc
+**2)[Schema Bloc](#Schema-Bloc)**
+
   -Schema Bloc
+  
   -Explication
   
-3)Caracteristique 
+**3)[Caracteristique](#Caracteristique )**
+  
   -General
+  
   -Electrique 
+  
   -Mecanique
   
-4)Schema de Principe 
+**4)[Schema de Principe](#Schema-de-Principe)** 
+
   -Schema de Principe (Sans bornier)
+  
   -Schema de Principe (Avec bornier)
   
-5)PCB
+**5)[PCB](#PCB)**
+
   -PCB (full)
+  
   -PCB (Sous couche)
+  
   -PCB (Plan de masse)
+  
   -PCB (+5V couche)
+  
   -PCB (Sur couche)
   
 6)Vue 3D
