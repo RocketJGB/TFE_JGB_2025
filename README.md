@@ -6,8 +6,6 @@
 - **Promotteur :** Feliz Kapita 
 
 **Sommaire**
-- [Introduction](#Introduction)
-- [Schema Bloc](#Schema-Bloc)
 
 **1)[Introduction](#Introduction)**
 
@@ -54,7 +52,7 @@
 
 
 
-1)[Introduction] 
+1)Introduction
 
 Pourquoi ce projet ? 
 
