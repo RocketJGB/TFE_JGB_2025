@@ -5,21 +5,21 @@
 - **Classe :** 6 TQ A
 - **Promotteur :** Feliz Kapita 
 
-**Sommaire**
+## **Sommaire**
 
-**1)[Introduction](#Introduction)**
+- [Introduction](#Introduction)**
 
   -Motivation 
   
   -Comment
   
-**2)[Schema Bloc](#Schema-Bloc)**
+- [Schema Bloc](#Schema-Bloc)**
 
   -Schema Bloc
   
   -Explication
   
-**3)[Caracteristique](#Caracteristique )**
+- [Caracteristique](#Caracteristique )**
   
   -General
   
@@ -27,13 +27,13 @@
   
   -Mecanique
   
-**4)[Schema de Principe](#Schema-de-Principe)** 
+- [Schema de Principe](#Schema-de-Principe)** 
 
   -Schema de Principe (Sans bornier)
   
   -Schema de Principe (Avec bornier)
   
-**5)[PCB](#PCB)**
+- [PCB](#PCB)**
 
   -PCB (full)
   
@@ -45,14 +45,13 @@
   
   -PCB (Sur couche)
   
-**6)[Vue 3D](#Vue-3D)**
+- [Vue 3D](#Vue-3D)**
 
-**7)[Datasheet](#Datasheet)**
-
-
+- [Datasheet](#Datasheet)**
 
 
-1) ##Introduction
+
+##Introduction
 
 Pourquoi ce projet ? 
 
