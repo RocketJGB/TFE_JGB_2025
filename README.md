@@ -7,13 +7,13 @@
 
 ## **Sommaire**
 
-- [Introduction](#Introduction)**
+**- [Introduction](#Introduction)**
 
   -Motivation 
   
   -Comment
   
-- [Schema Bloc](#Schema-Bloc)**
+**- [Schema Bloc](#Schema-Bloc)**
 
   -Schema Bloc
   
@@ -51,7 +51,7 @@
 
 
 
-##Introduction
+## Introduction
 
 Pourquoi ce projet ? 
 
@@ -63,7 +63,7 @@ Le bras fonctionnerait à l'aide de 6 servomoteurs permettant 5 axes de motions 
 
 Pour mieux capter la tension du servo, on va utiliser le MCP1525 qui est une référence de tension. Tout cela sera raccordé à l'ESP32 qui est le uC. Le ESP32 pourra ensuite, à l'aide de son Bluetooth intégré, recevoir des commandes du contrôleur ou de la manette. Le tout sera alimenté par un convertisseur de tension, l'IRM30-5 qui fournira une tension de 5V et un courant de 6A à partir de 230V qui est adéquat par rapport à la consommation des servos qui est de 4.8-7.2V et 500m-900mA.
 
-SCHEMA BLOC :
+## Schema-Bloc
 
 ![Screenshot 2025-03-26 185233](https://github.com/user-attachments/assets/f00ba97b-0116-41ec-8de4-51b59e725161)
 [Schema Bloc_final.pdf](https://github.com/user-attachments/files/19473042/Schema.Bloc_final.pdf)
