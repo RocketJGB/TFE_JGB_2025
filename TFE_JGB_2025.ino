@@ -36,11 +36,10 @@ exemple:
 //******************LIBRARY******************//
 
 #include "TFE_JGB_2025.h"  //Local
-//#include "Dabble_GamePad.h"
-//DabbleGamepad gamepad;
+
 
 void setup() {
-  //gamepad.begin(9600);
+
   Serial.begin(115200);  // Activation du Seriel moniteur
   while (!Serial) {}
   Verif_driver();
@@ -65,7 +64,7 @@ void loop() {
     Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!");
     while (mode == 2) {
       Hivemind_Command();
-      Measurement_Protocol();
+      //Measurement_Protocol();
     }
   }
   if (mode == 3) {

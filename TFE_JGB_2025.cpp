@@ -92,16 +92,26 @@ void Reset(void) {
   Set_servo(1, 1300);
   Set_servo(0, 2100);
 }
-void Set_servo(int chan, int value) {
-  int Pos_want = (value - 400) / 10;
-  int Pos_act = Mesure_angle(chan);
+void Set_servo(int chan, int value) 
+{
 
+  int Pos_want = (value - 400) / 10;
+  Serial.println(Pos_want);
+
+  int Pos_act = Mesure_angle(chan);
+  Serial.println(Pos_act);
+  
   faboPWM.set_channel_value(chan, value);
 
-  while (1) {
-    Pos_want = (value - 400) / 10;
+  while (1) 
+  {
     Pos_act = Mesure_angle(chan);
-    if ((Pos_act <= Pos_want - 10) || (Pos_act >= Pos_want + 10)) {
+    Serial.println(Pos_want);
+    Serial.println(Pos_act);
+
+    if ((Pos_act <= Pos_want - 10) || (Pos_act >= Pos_want + 10)) 
+    {
+      Serial.println("Position corrected");
       break;
     }
   }
@@ -242,8 +252,8 @@ void Verif_driver(void) {
 void Hivemind_Command(void) {
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n' || '\r');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
-    newPos = input.toInt();                       // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
-    pos = (newPos * 10) + 400;                    // Mettre à jour la variable de la position de commande
+    newPos = input.toInt();                               // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
+    pos = (newPos * 10) + 400;                            // Mettre à jour la variable de la position de commande
 
     Set_servo(0, pos);
     Set_servo(1, pos);
