@@ -10,11 +10,10 @@ char cmdBuffer[CMD_BUFFER_SIZE];  // Create a character array (buffer) to store 
 
 int angle = 0, adcValueA = 0, adcValueB = 0;
 float voltage = 0;
-int x;
 int mode = 0;
 int cmdIndex = 0;  // Initialize the index to track the buffer position
 int newPos = 0;
-int pos = 0;
+float pos = 0;
 int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
 {
   if (faboPWM.begin())  // Vérification
@@ -92,25 +91,23 @@ void Reset(void) {
   Set_servo(1, 1300);
   Set_servo(0, 2100);
 }
-void Set_servo(int chan, int value) 
-{
+void Set_servo(int chan, int value) {
 
-  int Pos_want = (value - 400) / 10;
+  int Pos1 = (value - 400) / 8.88;
+  int Pos_want = Pos1;
   Serial.println(Pos_want);
 
   int Pos_act = Mesure_angle(chan);
   Serial.println(Pos_act);
-  
+
   faboPWM.set_channel_value(chan, value);
 
-  while (1) 
-  {
+  while (1) {
     Pos_act = Mesure_angle(chan);
     Serial.println(Pos_want);
     Serial.println(Pos_act);
 
-    if ((Pos_act <= Pos_want - 10) || (Pos_act >= Pos_want + 10)) 
-    {
+    if ((Pos_act <= Pos_want - 10) || (Pos_act >= Pos_want + 10)) {
       Serial.println("Position corrected");
       break;
     }
@@ -132,7 +129,7 @@ float Mesure_voltage(int lane) {
 }
 int Mesure_angle(int lane) {
   int adcValueA = adc.readADC(lane);
-  int angle = (adcValueA - 170) / 2;
+  float angle = (adcValueA - 170) / 1.944;
   return angle;
 }
 void check_Serial_Command(void) {
@@ -253,15 +250,18 @@ void Hivemind_Command(void) {
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n' || '\r');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
     newPos = input.toInt();                               // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
-    pos = (newPos * 10) + 400;                            // Mettre à jour la variable de la position de commande
+    newPos = 180 - newPos;
+    pos = (newPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
+
 
     Set_servo(0, pos);
     Set_servo(1, pos);
     Set_servo(2, pos);
-    Set_servo(3, pos);
+     /* Set_servo(3, pos);
     Set_servo(4, pos);
+    */
 
-    Serial.print("Position définie sur : ");
+      Serial.print("Position définie sur : ");
     Serial.println(pos);
   }
 }
