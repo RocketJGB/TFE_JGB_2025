@@ -91,7 +91,7 @@ void Reset(void) {
   Set_servo(1, 1300);
   Set_servo(0, 2100);
 }
-void Set_servo(int chan, int value) {
+/*void Set_servo(int chan, int value) {
 
   int Pos1 = (value - 400) / 8.88;
   int Pos_want = Pos1;
@@ -112,6 +112,26 @@ void Set_servo(int chan, int value) {
       break;
     }
   }
+}*/
+void Set_servo(int chan, int value) {
+  int Pos_want = (value - 400) / 8.88;
+  Serial.println(Pos_want);
+
+  faboPWM.set_channel_value(chan, value);
+
+  while (true) {
+    int Pos_act = 180 - Mesure_angle(chan);
+    Serial.print("Target: ");
+    Serial.print(Pos_want);
+    Serial.print(" Actual: ");
+    Serial.println(Pos_act);
+
+    if ((Pos_act >= Pos_want - 10) && (Pos_act <= Pos_want + 10)) {
+      Serial.println("Position corrected");
+      break;
+    }
+    delay(50);
+  }
 }
 
 void ADC_Begin(int CS) {
@@ -128,7 +148,7 @@ float Mesure_voltage(int lane) {
   return voltage;
 }
 int Mesure_angle(int lane) {
-  int adcValueA = adc.readADC(lane);
+  int adcValueA = adc.readADC(5);
   float angle = (adcValueA - 170) / 1.944;
   return angle;
 }
@@ -250,18 +270,18 @@ void Hivemind_Command(void) {
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n' || '\r');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
     newPos = input.toInt();                               // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
-    newPos = 180 - newPos;
-    pos = (newPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
+    int midPos = 180 - newPos;
+    pos = (midPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
 
 
     Set_servo(0, pos);
-    Set_servo(1, pos);
+    /*Set_servo(1, pos);
     Set_servo(2, pos);
-     /* Set_servo(3, pos);
+    Set_servo(3, pos);
     Set_servo(4, pos);
     */
 
-      Serial.print("Position définie sur : ");
+    Serial.print("Position définie sur : ");
     Serial.println(pos);
   }
 }
