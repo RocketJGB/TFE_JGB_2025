@@ -14,6 +14,7 @@ int mode = 0;
 int cmdIndex = 0;  // Initialize the index to track the buffer position
 int newPos = 0;
 float pos = 0;
+int act_lane = 0;
 int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
 {
   if (faboPWM.begin())  // Vérification
@@ -120,7 +121,7 @@ void Set_servo(int chan, int value) {
   faboPWM.set_channel_value(chan, value);
 
   while (true) {
-    int Pos_act = 180 - Mesure_angle(chan);
+    int Pos_act = 180 - Mesure_angle(chan);  // This as well, dont try to understand it you'll go crazy
     Serial.print("Target: ");
     Serial.print(Pos_want);
     Serial.print(" Actual: ");
@@ -138,18 +139,23 @@ void ADC_Begin(int CS) {
   adc.begin(SLK, MOSI, MISO, CS);
 }
 float Mesure_voltage_test(int lane) {
-  int adcValueB = adc.readADC(lane);
+  ADC_Begin(CS_B);
+  act_lane = 5 - lane;
+  adcValueB = adc.readADC(lane);
   float voltage = (adcValueB * 2.5) / 1023.0;
   return voltage;
 }
 float Mesure_voltage(int lane) {
-  int adcValueA = adc.readADC(lane);
-  float voltage = (adcValueA * 5) / 1023.0;
+  ADC_Begin(CS_A);
+  act_lane = 5 - lane;
+  adcValueA = adc.readADC(lane);
+  voltage = (adcValueA * 5) / 1023.0;
   return voltage;
 }
 int Mesure_angle(int lane) {
-  int adcValueA = adc.readADC(5);
-  float angle = (adcValueA - 170) / 1.944;
+  act_lane = 5 - lane;
+  adcValueA = adc.readADC(act_lane);
+  angle = (adcValueA - 170) / 1.944;
   return angle;
 }
 void check_Serial_Command(void) {
@@ -270,13 +276,13 @@ void Hivemind_Command(void) {
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n' || '\r');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
     newPos = input.toInt();                               // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
-    int midPos = 180 - newPos;
-    pos = (midPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
+    int midPos = 180 - newPos;                            //if you touch this again I will steal you're fking grandmother mate
+    pos = (midPos * 8.88) + 400.0;                        // Mettre à jour la variable de la position de commande
 
 
     Set_servo(0, pos);
-    /*Set_servo(1, pos);
-    Set_servo(2, pos);
+    Set_servo(1, pos);
+    /*Set_servo(2, pos);
     Set_servo(3, pos);
     Set_servo(4, pos);
     */
