@@ -34,6 +34,7 @@ void Snake(void) {
   Set_servo(0, 500);
   Open();
   Close();
+  Set_servo(0, 1300);
   Open();
   Close();
   Set_servo(2, 1600);
@@ -41,6 +42,7 @@ void Snake(void) {
   Set_servo(0, 2100);
   Open();
   Close();
+  Set_servo(0, 1300);
   Open();
   Close();
   Reset();
@@ -92,28 +94,6 @@ void Reset(void) {
   Set_servo(1, 1300);
   Set_servo(0, 2100);
 }
-/*void Set_servo(int chan, int value) {
-
-  int Pos1 = (value - 400) / 8.88;
-  int Pos_want = Pos1;
-  Serial.println(Pos_want);
-
-  int Pos_act = Mesure_angle(chan);
-  Serial.println(Pos_act);
-
-  faboPWM.set_channel_value(chan, value);
-
-  while (1) {
-    Pos_act = Mesure_angle(chan);
-    Serial.println(Pos_want);
-    Serial.println(Pos_act);
-
-    if ((Pos_act <= Pos_want - 10) || (Pos_act >= Pos_want + 10)) {
-      Serial.println("Position corrected");
-      break;
-    }
-  }
-}*/
 void Set_servo(int chan, int value) {
   int Pos_want = (value - 400) / 8.88;
   Serial.println(Pos_want);
@@ -131,7 +111,6 @@ void Set_servo(int chan, int value) {
       Serial.println("Position corrected");
       break;
     }
-    delay(50);
   }
 }
 
@@ -206,6 +185,7 @@ void check_Serial_Command(void) {
   }
 }
 
+
 void Measurement_Protocol(void) {
   for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
   {
@@ -216,6 +196,9 @@ void Measurement_Protocol(void) {
     adcValueA = adc.readADC(chan);   // lecture de l'ADC
     voltage = Mesure_voltage(chan);  // Convertion en voltage
     angle = Mesure_angle(chan);      // Convertion en °
+    if (angle < 0) {
+      angle = 0;
+    }
     Serial.printf("Channel : %d \t ADC_B = %d \t ADC_A = %d \t Voltage = %f V\t Voltage = %f V\t Angle = %d °\n", chan, adcValueB, adcValueA, voltage, voltage_test, angle);
   }
   Serial.println("--------------------------------------------------------------------------------------------------------------------------");
@@ -274,12 +257,23 @@ void Verif_driver(void) {
 }
 void Hivemind_Command(void) {
   if (Serial.available()) {
+
     String input = Serial.readStringUntil('\n' || '\r');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
-    newPos = input.toInt();                               // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
-    int midPos = 180 - newPos;                            //if you touch this again I will steal you're fking grandmother mate
-    pos = (midPos * 8.88) + 400.0;                        // Mettre à jour la variable de la position de commande
+    input.trim();
+    if (input.equalsIgnoreCase("reset")) {
+      Serial.println("Restarting...");
+      ESP.restart();
+      return;
+    }
 
+    newPos = input.toInt();  // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
+    if (newPos < 0 || newPos > 180) {
+      Serial.println("Wrong coordinates, pls select a position between 0° and 180°");
+      return;
+    }
 
+    int midPos = 180 - newPos;      //if you touch this again I will steal you're fking grandmother mate
+    pos = (midPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
     Set_servo(0, pos);
     Set_servo(1, pos);
     /*Set_servo(2, pos);

@@ -61,14 +61,14 @@ void loop() {
     }
   }
   if (mode == 2) {
-    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!");
+    Serial.println("Please select a position between 0° and 180° and keep a safe distance");
     while (mode == 2) {
       Hivemind_Command();
       Measurement_Protocol();
     }
   }
   if (mode == 3) {
-    Serial.println("Please select a position between 400 and 2200 and keep a safe distance!!!!!!!!");
+    Serial.println("Please select a position between 0° and 180° and keep a safe distance");
     Reset();
     int chan_M3 = 0;
     while (mode == 3) {
@@ -79,7 +79,7 @@ void loop() {
       Measurement_Protocol();
     }
     Serial.println("Restarting...");
-    chan_M3 = 0;
+    ESP.restart();
   }
 }
 
