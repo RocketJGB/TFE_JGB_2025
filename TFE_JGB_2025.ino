@@ -42,12 +42,13 @@ void setup() {
 
   Serial.begin(115200);  // Activation du Seriel moniteur
   while (!Serial) {}
+  setupBLE();
   Verif_driver();
   ADC_Begin(CS_A);
   Serial.println("ADC_A Approved");
   ADC_Begin(CS_B);
   Serial.println("ADC_B Approved");
-  Serial.println("Pls select a mode (1 = Commande / 2 = Hive / 3 = Individuel / 4 = Bluetooth)");
+  Serial.println("Pls select a mode (1 = Commande / 2 = Hive / 3 = Individuel)");
 }
 void loop() {
 

@@ -6,6 +6,14 @@
 #include <Adafruit_MCP3008.h>  //dois le chercher dans l'environement
 #include <FaBoPWM_PCA9685.h>
 
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+// UUIDs du service UART BLE (inspirés du service Adafruit BLE UART)
+#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define CHARACTERISTIC_RX   "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+#define CHARACTERISTIC_TX   "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
 #define MOSI 23
 #define MISO 19
@@ -17,6 +25,8 @@
 extern Adafruit_MCP3008 adc;
 extern FaBoPWM faboPWM;
 
+extern BLECharacteristic *pTxCharacteristic;
+extern bool deviceConnected;
 
 extern int angle, adcValueA, adcValueB, mode;
 extern float voltage;
@@ -60,5 +70,15 @@ void Verif_driver(void);
 void Individuel_Servo_Command();
 
 void Hivemind_Command(void);
+
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer *pServer);
+  void onDisconnect(BLEServer *pServer);
+};
+class MyCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pCharacteristic);
+};
+
+void setupBLE();
 
 #endif

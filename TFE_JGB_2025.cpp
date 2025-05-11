@@ -4,10 +4,10 @@
 
 Adafruit_MCP3008 adc;  // Définition objet
 FaBoPWM faboPWM;
+BLECharacteristic *pTxCharacteristic;
 
 char cmdBuffer[CMD_BUFFER_SIZE];  // Create a character array (buffer) to store the command
-
-
+bool deviceConnected = false;
 int angle = 0, adcValueA = 0, adcValueB = 0;
 float voltage = 0;
 int mode = 0;
@@ -142,28 +142,28 @@ void check_Serial_Command(void) {
       if (strcmp(cmdBuffer, "reset") == 0) {
         Serial.println(" Reset Command card selected ");
         ESP.restart();
-      } else if (strcmp(cmdBuffer, "FormeZ") == 0) {
+      } else if (strcmp(cmdBuffer, "formez") == 0) {
         Serial.println(" Position Z selected ");
         Reset();
         Z_command();
-      } else if (strcmp(cmdBuffer, "FormeC") == 0) {
+      } else if (strcmp(cmdBuffer, "formec") == 0) {
         Serial.println(" Position C selected ");
         Reset();
         C_command();
-      } else if (strcmp(cmdBuffer, "FormeI") == 0) {
+      } else if (strcmp(cmdBuffer, "formei") == 0) {
         Serial.println(" Position I selected ");
         Reset();
         I_command();
-      } else if (strcmp(cmdBuffer, "Open") == 0) {
+      } else if (strcmp(cmdBuffer, "open") == 0) {
         Serial.println(" Claw Opened ");
         Open();
-      } else if (strcmp(cmdBuffer, "Close") == 0) {
+      } else if (strcmp(cmdBuffer, "close") == 0) {
         Serial.println(" Claw Closed ");
         Close();
-      } else if (strcmp(cmdBuffer, "Defence") == 0) {
+      } else if (strcmp(cmdBuffer, "defence") == 0) {
         Serial.println(" Im a minor, Get back!!!!!!! ");
         Snake();
-      } else if (strcmp(cmdBuffer, "Measure") == 0) {
+      } else if (strcmp(cmdBuffer, "measure") == 0) {
         Serial.println(" Measurements ");
         Measurement_Protocol();
       } else {
@@ -202,12 +202,12 @@ void Command_list(void) {
   Serial.println(F("--------------------------------------------------------"));  //F = Stored in the flash instead of RAM (save space and memory)
   Serial.println(F("Pls select a Command : "));
   Serial.println(F("reset = reset the code"));
-  Serial.println(F("FormeZ = Z pose"));
-  Serial.println(F("FormeC = C pose"));
-  Serial.println(F("FormeI = I pose"));
-  Serial.println(F("Open = Opens claw"));
-  Serial.println(F("Close = Closes claw"));
-  Serial.println(F("Measure = Measurement Protocol"));
+  Serial.println(F("formez = Z pose"));
+  Serial.println(F("formec = C pose"));
+  Serial.println(F("formei = I pose"));
+  Serial.println(F("open = Opens claw"));
+  Serial.println(F("close = Closes claw"));
+  Serial.println(F("measure = Measurement Protocol"));
   Serial.println(F("────────────────────────────────────────────────────────"));
 }
 void Mode_Choice(void) {
@@ -295,4 +295,58 @@ void Individuel_Servo_Command() {
       chan_M3++;
     }
   }
+}
+
+void MyServerCallbacks::onConnect(BLEServer *pServer) {
+  deviceConnected = true;
+  Serial.println("Client BLE connecté !");
+}
+
+void MyServerCallbacks::onDisconnect(BLEServer *pServer) {
+  deviceConnected = false;
+  Serial.println("Client BLE déconnecté.");
+  delay(500);
+  pServer->getAdvertising()->start();
+}
+
+void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
+  String rxValue = pCharacteristic->getValue().c_str();
+
+  if (rxValue.length() > 0) {
+    Serial.print("Reçu via BLE : ");
+    Serial.println(rxValue);
+
+    if (deviceConnected) {
+      pTxCharacteristic->setValue(rxValue);
+      delay(10);
+      pTxCharacteristic->notify();
+    }
+  }
+}
+
+void setupBLE() {
+  Serial.println("Démarrage du terminal BLE...");
+
+  BLEDevice::init("ESP32-Terminal");
+  BLEServer *pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+
+  BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_RX,
+    BLECharacteristic::PROPERTY_WRITE
+  );
+  pRxCharacteristic->setCallbacks(new MyCallbacks());
+
+  pTxCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_TX,
+    BLECharacteristic::PROPERTY_NOTIFY
+  );
+  pTxCharacteristic->addDescriptor(new BLE2902());
+
+  pService->start();
+  pServer->getAdvertising()->start();
+
+  Serial.println("En attente de connexion BLE...");
 }
