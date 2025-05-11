@@ -31,7 +31,7 @@ void Snake(void) {
   Reset();
   Set_servo(2, 900);
   Set_servo(3, 1600);
-  Set_servo(0, 500);
+  Set_servo(0, 400);
   Open();
   Close();
   Set_servo(0, 1300);
@@ -39,10 +39,10 @@ void Snake(void) {
   Close();
   Set_servo(2, 1600);
   Set_servo(3, 900);
-  Set_servo(0, 2100);
+  Set_servo(0, 2000);
   Open();
   Close();
-  Set_servo(0, 1300);
+  Set_servo(0, 1200);
   Open();
   Close();
   Reset();
@@ -54,62 +54,55 @@ void Close(void) {
   Set_servo(5, 1300);
 }
 void C_command(void) {
-  Set_servo(4, 500);  //Reset
-  Set_servo(3, 1300);
-  Set_servo(2, 1200);
-  Set_servo(1, 1300);
-  Set_servo(0, 2100);
-
-  Set_servo(0, 500);  //Formation set c
+  Reset();
+  Set_servo(0, 2000);  //Formation set c
   Set_servo(1, 2000);
-  Set_servo(2, 2000);
-  Set_servo(3, 500);
-  Set_servo(4, 500);
+  Set_servo(2, 400);
+  Set_servo(3, 2000);
+  Set_servo(4, 400);
 }
 void I_command(void) {
-  Set_servo(4, 500);  //Reset
-  Set_servo(3, 1300);
-  Set_servo(2, 1200);
-  Set_servo(1, 1300);
-  Set_servo(0, 2100);
+  Reset();
 }
 void Z_command(void) {
-
-  Set_servo(4, 500);  //Reset
-  Set_servo(3, 1300);
-  Set_servo(2, 1200);
-  Set_servo(1, 1300);
-  Set_servo(0, 2100);
-
-  Set_servo(0, 500);  //Formation set Z
-  Set_servo(1, 2000);
-  Set_servo(2, 2200);
-  Set_servo(3, 2200);
-  Set_servo(4, 500);
+  Reset();
+  Set_servo(0, 2000);  //Formation set Z
+  Set_servo(1, 1700);
+  Set_servo(2, 400);
+  Set_servo(3, 400);
+  Set_servo(4, 400);
 }
 void Reset(void) {
-  Set_servo(4, 500);  //Reset
-  Set_servo(3, 1300);
+  Set_servo(4, 400);  //Reset
+  Set_servo(3, 1200);
   Set_servo(2, 1200);
-  Set_servo(1, 1300);
-  Set_servo(0, 2100);
+  Set_servo(1, 1200);
+  Set_servo(0, 2000);
 }
 void Set_servo(int chan, int value) {
+  unsigned long millis_delay = millis();
   int Pos_want = (value - 400) / 8.88;
   Serial.println(Pos_want);
 
   faboPWM.set_channel_value(chan, value);
 
   while (true) {
+
     int Pos_act = 180 - Mesure_angle(chan);  // This as well, dont try to understand it you'll go crazy
     Serial.print("Target: ");
     Serial.print(Pos_want);
     Serial.print(" Actual: ");
-    Serial.println(Pos_act);
-
-    if ((Pos_act >= Pos_want - 10) && (Pos_act <= Pos_want + 10)) {
+    Serial.print(Pos_act);
+    Serial.print(" Measure: ");
+    Serial.println(Mesure_angle(chan));
+    delay(50);
+    if ((Pos_act >= Pos_want - 20) && (Pos_act <= Pos_want + 20)) {
       Serial.println("Position corrected");
       break;
+    }
+    if (millis() >= millis_delay + 5000) {
+      Serial.write("Restarting...");
+      ESP.restart();
     }
   }
 }
@@ -120,18 +113,19 @@ void ADC_Begin(int CS) {
 float Mesure_voltage_test(int lane) {
   ADC_Begin(CS_B);
   act_lane = 5 - lane;
-  adcValueB = adc.readADC(lane);
+  adcValueB = adc.readADC(act_lane);
   float voltage = (adcValueB * 2.5) / 1023.0;
   return voltage;
 }
 float Mesure_voltage(int lane) {
   ADC_Begin(CS_A);
   act_lane = 5 - lane;
-  adcValueA = adc.readADC(lane);
+  adcValueA = adc.readADC(act_lane);
   voltage = (adcValueA * 5) / 1023.0;
   return voltage;
 }
 int Mesure_angle(int lane) {
+  ADC_Begin(CS_A);
   act_lane = 5 - lane;
   adcValueA = adc.readADC(act_lane);
   angle = (adcValueA - 170) / 1.944;
@@ -166,7 +160,7 @@ void check_Serial_Command(void) {
       } else if (strcmp(cmdBuffer, "Close") == 0) {
         Serial.println(" Claw Closed ");
         Close();
-      } else if (strcmp(cmdBuffer, "Defense") == 0) {
+      } else if (strcmp(cmdBuffer, "Defence") == 0) {
         Serial.println(" Im a minor, Get back!!!!!!! ");
         Snake();
       } else if (strcmp(cmdBuffer, "Measure") == 0) {
@@ -272,28 +266,33 @@ void Hivemind_Command(void) {
       return;
     }
 
-    int midPos = 180 - newPos;      //if you touch this again I will steal you're fking grandmother mate
+    int midPos = 180 - newPos;      //if you touch this again I will steal you're fking grandmother
     pos = (midPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
-    Set_servo(0, pos);
-    Set_servo(1, pos);
-    /*Set_servo(2, pos);
+    Set_servo(0, 2000);
+    Set_servo(1, 1200);
+    Set_servo(2, pos);
     Set_servo(3, pos);
     Set_servo(4, pos);
-    */
+
 
     Serial.print("Position définie sur : ");
     Serial.println(pos);
   }
 }
-void Individuel_Servo_Command(int chan) {
-  if (Serial.available()) {
-    String input = Serial.readStringUntil('\n' || '\r');
-    newPos = input.toInt();
-    pos = (newPos * 10) + 400;  // Mettre à jour la variable de la position de commande
-    Set_servo(chan, pos);
-    Serial.print("channel : ");
-    Serial.print(chan);
-    Serial.print("\t");
-    Serial.println(pos);
+void Individuel_Servo_Command() {
+  int chan_M3 = 0;
+  while (chan_M3 < 6) {
+    if (Serial.available()) {
+      Serial.print(chan_M3);
+      String input = Serial.readStringUntil('\n' || '\r');
+      newPos = input.toInt();
+      pos = (newPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
+      Set_servo(chan_M3, pos);
+      Serial.print("channel : ");
+      Serial.print(chan_M3);
+      Serial.print("\t");
+      Serial.println(pos);
+      chan_M3++;
+    }
   }
 }

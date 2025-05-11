@@ -70,16 +70,12 @@ void loop() {
   if (mode == 3) {
     Serial.println("Please select a position between 0° and 180° and keep a safe distance");
     Reset();
-    int chan_M3 = 0;
     while (mode == 3) {
-      while (chan_M3 < 6) {
-        Individuel_Servo_Command(chan_M3);
-        chan_M3++;
-      }
       Measurement_Protocol();
+      Individuel_Servo_Command();
+      Measurement_Protocol();
+      Serial.println("Restarting...");
+      ESP.restart();
     }
-    Serial.println("Restarting...");
-    ESP.restart();
   }
 }
-

@@ -57,7 +57,7 @@ void Mode_Choice(void);
 
 void Verif_driver(void);
 
-void Individuel_Servo_Command(int chan);
+void Individuel_Servo_Command();
 
 void Hivemind_Command(void);
 
