@@ -1,37 +1,54 @@
-
+//******************ENTETE******************//
+/* 
+  Nom: James Gordon-Ball
+  Classe: 6A  
+  Date: 2024-2025
+  Ecole: IN.RA.CI
+  Promoteur: Mr Kapita
+*/
+//******************LIBRARY******************//
 #include "TFE_JGB_2025.h"
 
-
+//******************DEFINITION*****************//
 Adafruit_MCP3008 adc;  // Définition objet
 FaBoPWM faboPWM;
-BLECharacteristic *pTxCharacteristic;
 
+//******************VARIABLE*****************//
 char cmdBuffer[CMD_BUFFER_SIZE];  // Create a character array (buffer) to store the command
-bool deviceConnected = false;
 int angle = 0, adcValueA = 0, adcValueB = 0;
 float voltage = 0;
 int mode = 0;
-int cmdIndex = 0;  // Initialize the index to track the buffer position
+int cmdIndex = 0;  // index to track the buffer position
 int newPos = 0;
 float pos = 0;
 int act_lane = 0;
+bool Check_ACQ = false;
+
+//******************FONCTION*****************//
 int init_PCA9685(void)  // Activation du PCA9685 (Servo-driver)
 {
-  if (faboPWM.begin())  // Vérification
-  {
-    faboPWM.init(300);    // Initialisation des parametres internes
-    faboPWM.set_hz(200);  // Mettre la frequence a 50Hz (20ms)
+  if (faboPWM.begin()) {
+    faboPWM.init(300);    // Initialisation of the internal parameters
+    faboPWM.set_hz(200);  // Establishing the frequence at 200hz(5ms)
     return 1;
   } else {
     Serial.println("PCA9685 n'est pas trouvé");
     return 0;
   }
 }
-void Snake(void) {
+void Snake(void) {  //Position sequence (defence)
   Reset();
+  Set_servo(0, 2000);
   Set_servo(2, 900);
   Set_servo(3, 1600);
+  Open();
+  Close();
   Set_servo(0, 400);
+  Open();
+  Close();
+  Set_servo(0, 1200);
+  Set_servo(2, 900);
+  Set_servo(3, 1600);
   Open();
   Close();
   Set_servo(0, 1300);
@@ -39,7 +56,6 @@ void Snake(void) {
   Close();
   Set_servo(2, 1600);
   Set_servo(3, 900);
-  Set_servo(0, 2000);
   Open();
   Close();
   Set_servo(0, 1200);
@@ -47,48 +63,75 @@ void Snake(void) {
   Close();
   Reset();
 }
-void Open(void) {
+void Secret(void) {  //Position sequence (special)
+  Set_servo(0, 1200);
+  Open();
+  Set_servo(1, 850);
+  Set_servo(2, 1000);
+  Set_servo(5, 1110);
+  for (int i = 0; i < 5; i++) {
+    Set_servo(3, 850);
+    Set_servo(3, 1550);
+  }
+  Set_servo(4, 2000);
+  Open();
+}
+void Open(void) {  //Position sequence (open claw)
   Set_servo(5, 700);
 }
-void Close(void) {
+void Close(void) {  //Position sequence (close claw)
   Set_servo(5, 1300);
 }
-void C_command(void) {
-  Reset();
-  Set_servo(0, 2000);  //Formation set c
-  Set_servo(1, 2000);
+void C_command(void) {  //Position sequence (forme a C)
   Set_servo(2, 400);
   Set_servo(3, 2000);
   Set_servo(4, 400);
+  Set_servo(0, 2000);
+  Set_servo(1, 2000);
 }
-void I_command(void) {
+void I_command(void) {  //Position sequence (forme a I)
   Reset();
 }
-void Z_command(void) {
-  Reset();
-  Set_servo(0, 2000);  //Formation set Z
+void Z_command(void) {  //Position sequence (forme a Z)
+  Set_servo(0, 2000);
   Set_servo(1, 1700);
   Set_servo(2, 400);
   Set_servo(3, 400);
   Set_servo(4, 400);
 }
-void Reset(void) {
-  Set_servo(4, 400);  //Reset
+void Reset(void) {  //Position sequence (reset)
+  Set_servo(4, 400);
   Set_servo(3, 1200);
   Set_servo(2, 1200);
   Set_servo(1, 1200);
   Set_servo(0, 2000);
 }
-void Set_servo(int chan, int value) {
+void Set_servo(int chan, int value) {  //Servo command function
   unsigned long millis_delay = millis();
-  int Pos_want = (value - 400) / 8.88;
-  Serial.println(Pos_want);
+  int Pos_want = (value - 400) / 8.88;  //Retransforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
+  int Pos_S0_min = 30;
+  int Pos_S0_max = 160;
 
-  faboPWM.set_channel_value(chan, value);
+  Serial.println(Pos_want);
+  faboPWM.set_channel_value(chan, value);  // Servo command
+
+  if (chan == 0) {
+    if (Pos_want >= Pos_S0_min || Pos_want <= Pos_S0_max) {  //Checks if the arm is in the danger zone of the box
+      Check_ACQ = true;                                      // Danger present
+    } else {
+      Check_ACQ = false;  // Safe to proceed
+    }
+  }
 
   while (true) {
-
-    int Pos_act = 180 - Mesure_angle(chan);  // This as well, dont try to understand it you'll go crazy
+    if (chan == 1) {  //if danger present move the second servo from the base to 40° (away from the box)
+      if (Check_ACQ == true) {
+        faboPWM.set_channel_value(chan, 750);
+        break;
+      }
+    }
+    int Pos_act = Mesure_angle(chan);
+    Serial.print("chan: ");
     Serial.print("Target: ");
     Serial.print(Pos_want);
     Serial.print(" Actual: ");
@@ -96,39 +139,40 @@ void Set_servo(int chan, int value) {
     Serial.print(" Measure: ");
     Serial.println(Mesure_angle(chan));
     delay(50);
-    if ((Pos_act >= Pos_want - 20) && (Pos_act <= Pos_want + 20)) {
+    if ((Pos_act >= Pos_want - 30) && (Pos_act <= Pos_want + 30)) {  // Compares both present and desired positions together to be able to pass to the next task
       Serial.println("Position corrected");
       break;
     }
-    if (millis() >= millis_delay + 5000) {
+    if (millis() >= millis_delay + 5000) {  //millis delay timer with reset failsafe incase of astronomicaly terrible situation
       Serial.write("Restarting...");
       ESP.restart();
     }
   }
 }
 
-void ADC_Begin(int CS) {
+void ADC_Begin(int CS) {  // ADC initialiser function
   adc.begin(SLK, MOSI, MISO, CS);
 }
-float Mesure_voltage_test(int lane) {
+float Mesure_voltage_test(int lane) {  // hall effect sensor output voltage calculator
   ADC_Begin(CS_B);
   act_lane = 5 - lane;
   adcValueB = adc.readADC(act_lane);
-  float voltage = (adcValueB * 2.5) / 1023.0;
+  float voltage = (adcValueB * 2.5) / 1023.0;  //(2.5 = Vref)(1023.0 = number of divisions)
   return voltage;
 }
-float Mesure_voltage(int lane) {
+float Mesure_voltage(int lane) {  // Servomotor output voltage calculator
   ADC_Begin(CS_A);
   act_lane = 5 - lane;
   adcValueA = adc.readADC(act_lane);
-  voltage = (adcValueA * 5) / 1023.0;
+  float voltage = (adcValueA * 5) / 1023.0;  //(5 = Vref *2)(1023.0 = number of divisions)
   return voltage;
 }
-int Mesure_angle(int lane) {
+int Mesure_angle(int lane) {  // Servomotor output angle calculator
   ADC_Begin(CS_A);
   act_lane = 5 - lane;
   adcValueA = adc.readADC(act_lane);
-  angle = (adcValueA - 170) / 1.944;
+  angle = (adcValueA - 170) / 1.944;  // Converts the raw ADC value back into an angle(170 = offset)(1.944 = (Max_ADC_value - Min_ADC_value) / 180)
+  angle = 180 - angle;                // inverts the angle for compatibility with other functions
   return angle;
 }
 void check_Serial_Command(void) {
@@ -136,44 +180,47 @@ void check_Serial_Command(void) {
   while (Serial.available()) {
     char c = Serial.read();
 
-    if (c == '\n' || c == '\r') {
-      cmdBuffer[cmdIndex] = '\0';
+    if (c == '\n' || c == '\r') {  // Reads to the end of the line (Enter) / keeps reading until the /n is entered
+      cmdBuffer[cmdIndex] = '\0';  // adds a null caracter at the end
 
-      if (strcmp(cmdBuffer, "reset") == 0) {
-        Serial.println(" Reset Command card selected ");
+      if (strcmp(cmdBuffer, "reset") == 0) {  // returns "0" when both strings are equal
         ESP.restart();
+        Serial.println(" Reset Command card selected ");
       } else if (strcmp(cmdBuffer, "formez") == 0) {
-        Serial.println(" Position Z selected ");
         Reset();
         Z_command();
+        Serial.println(" Position Z selected ");
       } else if (strcmp(cmdBuffer, "formec") == 0) {
-        Serial.println(" Position C selected ");
         Reset();
         C_command();
+        Serial.println(" Position C selected ");
       } else if (strcmp(cmdBuffer, "formei") == 0) {
-        Serial.println(" Position I selected ");
         Reset();
         I_command();
+        Serial.println(" Position I selected ");
       } else if (strcmp(cmdBuffer, "open") == 0) {
-        Serial.println(" Claw Opened ");
         Open();
+        Serial.println(" Claw Opened ");
       } else if (strcmp(cmdBuffer, "close") == 0) {
-        Serial.println(" Claw Closed ");
         Close();
+        Serial.println(" Claw Closed ");
       } else if (strcmp(cmdBuffer, "defence") == 0) {
-        Serial.println(" Im a minor, Get back!!!!!!! ");
         Snake();
+        Serial.println(" Back up, im underaged!!!!!!! ");
+      } else if (strcmp(cmdBuffer, "xxx") == 0) {
+        Secret();
+        Serial.println(" Feels good ");
       } else if (strcmp(cmdBuffer, "measure") == 0) {
-        Serial.println(" Measurements ");
         Measurement_Protocol();
+        Serial.println(" Measurements ");
       } else {
         Serial.print(F(" Unrecognised Commande :  "));
         Serial.println(cmdBuffer);
-        Command_list();
+        Command_list();  // Command display
       }
-      cmdIndex = 0;
-      memset(cmdBuffer, 0, CMD_BUFFER_SIZE);
-    } else if (cmdIndex < CMD_BUFFER_SIZE - 1) {
+      cmdIndex = 0;                               // resets the array
+      memset(cmdBuffer, 0, CMD_BUFFER_SIZE);      //Sets all the bits of the array to 0
+    } else if (cmdIndex < CMD_BUFFER_SIZE - 1) {  // Fills the bits in the array one at a time until /n or /r is received
       cmdBuffer[cmdIndex++] = c;
     }
   }
@@ -181,15 +228,15 @@ void check_Serial_Command(void) {
 
 
 void Measurement_Protocol(void) {
-  for (int chan = 0; chan < 6; chan++)  // faire une lecture de chaque channel sur le MCP3008 (ADC/CAN)
+  for (int chan = 0; chan < 6; chan++)  // Takes a measurements of each ADC channel
   {
-    adc.begin(CS_B);
+    adc.begin(CS_B);  // Triggers the hall effect sensor voltage input
     adcValueB = adc.readADC(chan);
     float voltage_test = Mesure_voltage_test(chan);
-    adc.begin(CS_A);
-    adcValueA = adc.readADC(chan);   // lecture de l'ADC
-    voltage = Mesure_voltage(chan);  // Convertion en voltage
-    angle = Mesure_angle(chan);      // Convertion en °
+    adc.begin(CS_A);  // Triggers the servomotor voltage input
+    adcValueA = adc.readADC(chan);
+    voltage = Mesure_voltage(chan);  // Converts to volts
+    angle = Mesure_angle(chan);      // Converts to °
     if (angle < 0) {
       angle = 0;
     }
@@ -212,9 +259,9 @@ void Command_list(void) {
 }
 void Mode_Choice(void) {
   if (Serial.available()) {
-    Serial.println("Serial avail");
-    String input = Serial.readStringUntil('\n' || '\r');
-    int Data = input.toInt();
+    Serial.println("Serial available");
+    String input = Serial.readStringUntil('\n' || '\r');  // Converts the input into a String until /n (enter) or /r (carriage return) is received
+    int Data = input.toInt();                             // ReConverts the string to a long integer
     Serial.println("Serial received");
     switch (Data) {
       case 1:
@@ -229,18 +276,14 @@ void Mode_Choice(void) {
         mode = 3;
         Serial.println("Individuel Position mode chosen");
         break;
-      case 4:
-        mode = 4;
-        Serial.println("Bluetooth mode chosen");
-        break;
       default:
         Serial.println("Invalid input. Please enter 1, 2, 3, or 4.");
         break;
     }
   }
 }
-void Verif_driver(void) {
-  int a = init_PCA9685();  // Fonction d'activation du PCA9685 (Driver-servo)
+void Verif_driver(void) {  //Activation function for the PCA9685(Driver-servo)
+  int a = init_PCA9685();
   if (a == 1) {
     Serial.println("PCA9685 trouvé");
   } else {
@@ -252,42 +295,45 @@ void Verif_driver(void) {
 void Hivemind_Command(void) {
   if (Serial.available()) {
 
-    String input = Serial.readStringUntil('\n' || '\r');  // Lire jusqu'à la fin de ligne (Entrée) / tourne jusqu'a le donnee /n est entree
-    input.trim();
-    if (input.equalsIgnoreCase("reset")) {
+    String input = Serial.readStringUntil('\n' || '\r');  // Converts the input into a String until /n (enter) or /r (carriage return) is received
+    if (input.equalsIgnoreCase("reset")) {                // Checks for reset command
       Serial.println("Restarting...");
       ESP.restart();
       return;
     }
 
-    newPos = input.toInt();  // Convertir la chaîne en entier / fait une lecture du Serial 0 et l'integre dans le newPos
+    newPos = input.toInt();  // Reconverts the string to a long integer
     if (newPos < 0 || newPos > 180) {
       Serial.println("Wrong coordinates, pls select a position between 0° and 180°");
       return;
     }
 
-    int midPos = 180 - newPos;      //if you touch this again I will steal you're fking grandmother
-    pos = (midPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
-    Set_servo(0, 2000);
+    //newPos = 180 - newPos;      //if you touch this again I will steal you're grandmother (grandma gone)
+    pos = (newPos * 8.88) + 400.0;  //transforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
+    Set_servo(0, 2000);             //0 = Base servo
     Set_servo(1, 1200);
     Set_servo(2, pos);
     Set_servo(3, pos);
-    Set_servo(4, pos);
+    Set_servo(4, pos);              //4 = neck servo
 
 
     Serial.print("Position définie sur : ");
     Serial.println(pos);
   }
 }
-void Individuel_Servo_Command() {
-  int chan_M3 = 0;
-  while (chan_M3 < 6) {
+void Individuel_Servo_Command(void) {
+  int chan_M3 = 0;                   //Tracking variable 
+  while (chan_M3 < 6) {              
+    Measurement_Protocol();
     if (Serial.available()) {
       Serial.print(chan_M3);
+
       String input = Serial.readStringUntil('\n' || '\r');
       newPos = input.toInt();
-      pos = (newPos * 8.88) + 400.0;  // Mettre à jour la variable de la position de commande
+
+      pos = (newPos * 8.88) + 400.0;  //transforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
       Set_servo(chan_M3, pos);
+
       Serial.print("channel : ");
       Serial.print(chan_M3);
       Serial.print("\t");
@@ -295,58 +341,4 @@ void Individuel_Servo_Command() {
       chan_M3++;
     }
   }
-}
-
-void MyServerCallbacks::onConnect(BLEServer *pServer) {
-  deviceConnected = true;
-  Serial.println("Client BLE connecté !");
-}
-
-void MyServerCallbacks::onDisconnect(BLEServer *pServer) {
-  deviceConnected = false;
-  Serial.println("Client BLE déconnecté.");
-  delay(500);
-  pServer->getAdvertising()->start();
-}
-
-void MyCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
-  String rxValue = pCharacteristic->getValue().c_str();
-
-  if (rxValue.length() > 0) {
-    Serial.print("Reçu via BLE : ");
-    Serial.println(rxValue);
-
-    if (deviceConnected) {
-      pTxCharacteristic->setValue(rxValue);
-      delay(10);
-      pTxCharacteristic->notify();
-    }
-  }
-}
-
-void setupBLE() {
-  Serial.println("Démarrage du terminal BLE...");
-
-  BLEDevice::init("ESP32-Terminal");
-  BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(
-    CHARACTERISTIC_RX,
-    BLECharacteristic::PROPERTY_WRITE
-  );
-  pRxCharacteristic->setCallbacks(new MyCallbacks());
-
-  pTxCharacteristic = pService->createCharacteristic(
-    CHARACTERISTIC_TX,
-    BLECharacteristic::PROPERTY_NOTIFY
-  );
-  pTxCharacteristic->addDescriptor(new BLE2902());
-
-  pService->start();
-  pServer->getAdvertising()->start();
-
-  Serial.println("En attente de connexion BLE...");
 }

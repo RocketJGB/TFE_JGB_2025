@@ -1,40 +1,43 @@
-// pq le poulet?
-/*
 
+/*
 to do list:
 -MVC !!!!!!!  
--fonction     //
--sleep//
+-fonction     
+-sleep
 -comments
--local librairy//
+-local librairy
 -bluetooth
 -burn the school down
 -courant measurement
--contraint management system   //
+-contraint management system   
 -safety cap   
 -it talks to me 
--move the degree and voltage measurements up into each respective mode  //
+-move the degree and voltage measurements up into each respective mode  
 -etc
 
-   James Gordon-Ball
-     6A  2024-2025
+NEW STOUGH TO DO: 
+-BLE compatible
+-Safety current
+-comments
+-EMO add
+//******************ENTETE******************
+  Nom: James Gordon-Ball
+  Classe: 6A  
+  Date: 2024-2025
+  Ecole: IN.RA.CI
+  Promoteur: Mr Kapita
+
+//******************HARDWARE******************
      Ce code me permet t'uliser mon : 
      -ESP32   (Microcontroleur)
      -MCP3008 (ADC/CAN)
      -PCA9685 (Driver-Servo)
      -MG996r  (Servomoteur)
-*/
-/*
-exemple:
-
-#define kk
-#ifdef kk
- Serial.print("fjqiuhiuqsh");
-#endif
+     -ACS712  (Capteur de Courant)
+     -Bluetooth
 */
 
 //******************LIBRARY******************//
-
 #include "TFE_JGB_2025.h"  //Local
 
 
@@ -42,7 +45,7 @@ void setup() {
 
   Serial.begin(115200);  // Activation du Seriel moniteur
   while (!Serial) {}
-  setupBLE();
+
   Verif_driver();
   ADC_Begin(CS_A);
   Serial.println("ADC_A Approved");
@@ -50,8 +53,8 @@ void setup() {
   Serial.println("ADC_B Approved");
   Serial.println("Pls select a mode (1 = Commande / 2 = Hive / 3 = Individuel)");
 }
-void loop() {
 
+void loop() {
   Mode_Choice();
 
   if (mode == 1) {
@@ -72,11 +75,15 @@ void loop() {
     Serial.println("Please select a position between 0° and 180° and keep a safe distance");
     Reset();
     while (mode == 3) {
-      Measurement_Protocol();
       Individuel_Servo_Command();
-      Measurement_Protocol();
       Serial.println("Restarting...");
       ESP.restart();
+    }
+  }
+  if (mode == 4) {
+    Serial.println("Please select a position between 0° and 180° and keep a safe distance");
+    while (mode == 4) {
+      Serial.println("its alive!!!!!!!!");
     }
   }
 }
