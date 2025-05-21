@@ -106,30 +106,16 @@ void Reset(void) {  //Position sequence (reset)
   Set_servo(1, 1200);
   Set_servo(0, 2000);
 }
+
 void Set_servo(int chan, int value) {  //Servo command function
   unsigned long millis_delay = millis();
   int Pos_want = (value - 400) / 8.88;  //Retransforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
-  int Pos_S0_min = 30;
-  int Pos_S0_max = 160;
 
   Serial.println(Pos_want);
   faboPWM.set_channel_value(chan, value);  // Servo command
 
-  if (chan == 0) {
-    if (Pos_want >= Pos_S0_min || Pos_want <= Pos_S0_max) {  //Checks if the arm is in the danger zone of the box
-      Check_ACQ = true;                                      // Danger present
-    } else {
-      Check_ACQ = false;  // Safe to proceed
-    }
-  }
-
   while (true) {
-    if (chan == 1) {  //if danger present move the second servo from the base to 40° (away from the box)
-      if (Check_ACQ == true) {
-        faboPWM.set_channel_value(chan, 750);
-        break;
-      }
-    }
+
     int Pos_act = Mesure_angle(chan);
     Serial.print("chan: ");
     Serial.print("Target: ");
@@ -138,6 +124,7 @@ void Set_servo(int chan, int value) {  //Servo command function
     Serial.print(Pos_act);
     Serial.print(" Measure: ");
     Serial.println(Mesure_angle(chan));
+
     delay(50);
     if ((Pos_act >= Pos_want - 30) && (Pos_act <= Pos_want + 30)) {  // Compares both present and desired positions together to be able to pass to the next task
       Serial.println("Position corrected");
@@ -295,8 +282,10 @@ void Verif_driver(void) {  //Activation function for the PCA9685(Driver-servo)
 void Hivemind_Command(void) {
   if (Serial.available()) {
 
-    String input = Serial.readStringUntil('\n' || '\r');  // Converts the input into a String until /n (enter) or /r (carriage return) is received
-    if (input.equalsIgnoreCase("reset")) {                // Checks for reset command
+    String input = Serial.readStringUntil('\n');  // Converts the input into a String until /n (enter) or /r (carriage return) is received
+    input.trim();
+
+    if (input.equalsIgnoreCase("reset")) {  // Checks for reset command
       Serial.println("Restarting...");
       ESP.restart();
       return;
@@ -314,7 +303,7 @@ void Hivemind_Command(void) {
     Set_servo(1, 1200);
     Set_servo(2, pos);
     Set_servo(3, pos);
-    Set_servo(4, pos);              //4 = neck servo
+    Set_servo(4, pos);  //4 = neck servo
 
 
     Serial.print("Position définie sur : ");
@@ -322,16 +311,30 @@ void Hivemind_Command(void) {
   }
 }
 void Individuel_Servo_Command(void) {
-  int chan_M3 = 0;                   //Tracking variable 
-  while (chan_M3 < 6) {              
+  int chan_M3 = 0;  //Tracking variable
+  int Pos_S0_min = 30;
+  int Pos_S0_max = 160;
+
+  while (chan_M3 < 6) {
     Measurement_Protocol();
+
+    if (chan_M3 == 1 && Check_ACQ == true) {  //if danger present move the second servo from the base to 40° (away from the box)
+      faboPWM.set_channel_value(chan_M3, 750);
+      break;
+    }
+
     if (Serial.available()) {
       Serial.print(chan_M3);
 
       String input = Serial.readStringUntil('\n' || '\r');
       newPos = input.toInt();
-
       pos = (newPos * 8.88) + 400.0;  //transforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
+
+      if (chan_M3 == 0) {
+        if (pos >= Pos_S0_min && pos <= Pos_S0_max) {  //Checks if the arm is in the danger zone of the box
+          Check_ACQ = true;                            // Danger present
+        }
+      }
       Set_servo(chan_M3, pos);
 
       Serial.print("channel : ");

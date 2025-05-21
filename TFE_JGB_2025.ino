@@ -35,6 +35,13 @@ NEW STOUGH TO DO:
      -MG996r  (Servomoteur)
      -ACS712  (Capteur de Courant)
      -Bluetooth
+//******************AVERTISSEMENT****************** 
+Ce code a ete inspirer de code externe et d'intelligence artificiel telle que : 
+- Code CANSAT (Mr. Kapita)
+- ChatGPT
+- Code exemple 
+- Ancien code
+- etc
 */
 
 //******************LIBRARY******************//
