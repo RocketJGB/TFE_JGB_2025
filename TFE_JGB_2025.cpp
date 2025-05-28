@@ -301,10 +301,9 @@ void Hivemind_Command(void) {
     pos = (newPos * 8.88) + 400.0;  //transforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
     Set_servo(0, 2000);             //0 = Base servo
     Set_servo(1, 1200);
-    Set_servo(2, pos);
-    Set_servo(3, pos);
     Set_servo(4, pos);  //4 = neck servo
-
+    Set_servo(3, pos);
+    Set_servo(2, pos);
 
     Serial.print("Position définie sur : ");
     Serial.println(pos);
@@ -316,32 +315,42 @@ void Individuel_Servo_Command(void) {
   int Pos_S0_max = 160;
 
   while (chan_M3 < 6) {
-    Measurement_Protocol();
+    // Measurement_Protocol();
 
-    if (chan_M3 == 1 && Check_ACQ == true) {  //if danger present move the second servo from the base to 40° (away from the box)
+   /* if (chan_M3 == 1 && Check_ACQ == true) {  //if danger present move the second servo from the base to 40° (away from the box)
       faboPWM.set_channel_value(chan_M3, 750);
+      Serial.println("⚠️  Danger prevented — Check_ACQ set to true");
       break;
     }
 
     if (Serial.available()) {
-      Serial.print(chan_M3);
+      while (chan_M3 == 1) {
+        int Mes_act = Mesure_angle(0);
+        if (Mes_act >= Pos_S0_min && Mes_act <= Pos_S0_max)
+      }*/
 
-      String input = Serial.readStringUntil('\n' || '\r');
-      newPos = input.toInt();
-      pos = (newPos * 8.88) + 400.0;  //transforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
+    Serial.print(chan_M3);
 
-      if (chan_M3 == 0) {
-        if (pos >= Pos_S0_min && pos <= Pos_S0_max) {  //Checks if the arm is in the danger zone of the box
-          Check_ACQ = true;                            // Danger present
-        }
+    String input = Serial.readStringUntil('\n' || '\r');
+    newPos = input.toInt();
+    Serial.println("⚠️ starting check — Check_ACQ set to true");
+
+    /*if (chan_M3 == 0) {
+      if (newPos >= Pos_S0_min && newPos <= Pos_S0_max) {  //Checks if the arm is in the danger zone of the box
+        Check_ACQ = true;                                  // Danger present
+        Serial.println("⚠️  Danger detected — Check_ACQ set to true");
       }
-      Set_servo(chan_M3, pos);
-
-      Serial.print("channel : ");
-      Serial.print(chan_M3);
-      Serial.print("\t");
-      Serial.println(pos);
-      chan_M3++;
     }
+*/
+    pos = (newPos * 8.88) + 400.0;  //transforms the angle value into a brut value(400 = offset) (8.88 = (Max_value - Min_value)/180)
+
+
+    Set_servo(chan_M3, pos);
+
+    Serial.print("channel : ");
+    Serial.print(chan_M3);
+    Serial.print("\t");
+    Serial.println(pos);
+    chan_M3++;
   }
 }

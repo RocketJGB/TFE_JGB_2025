@@ -7,7 +7,6 @@ to do list:
 -comments
 -local librairy
 -bluetooth
--burn the school down
 -courant measurement
 -contraint management system   
 -safety cap   
@@ -28,7 +27,7 @@ NEW STOUGH TO DO:
   Promoteur: Mr Kapita
 
 //******************HARDWARE******************
-     Ce code me permet t'uliser mon : 
+  Ce code me permet t'uliser mon : 
      -ESP32   (Microcontroleur)
      -MCP3008 (ADC/CAN)
      -PCA9685 (Driver-Servo)
