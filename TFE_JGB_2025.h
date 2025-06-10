@@ -14,7 +14,7 @@
 #include <Wire.h>
 #include <Adafruit_MCP3008.h>  //dois le chercher dans l'environement
 #include <FaBoPWM_PCA9685.h>
-
+#include <string>
 //******************CONSTANTE*****************//
 #define MOSI 23
 #define MISO 19
@@ -33,6 +33,10 @@ extern float voltage;
 
 //******************FONCTION*****************//
 void check_Serial_Command(void);
+
+void Simple_test_box(void);
+
+void Wave(void);
 
 void C_command(void);
 
@@ -74,4 +78,5 @@ void Individuel_Servo_Command(void);
 
 void Hivemind_Command(void);
 
+void Check_reset(String enter);
 #endif
